@@ -27,13 +27,10 @@ class Board:
         accepted_positions = [[(j, i) for j in range(self.columns) if self.grid[i][j] == (0, 0, 0)] for i in range(self.rows)]
         accepted_positions = [pos for sublist in accepted_positions for pos in sublist] # Згладжуємо список
 
-        # Отримуємо координати блоків поточної фігури
-        # (Замініть get_formatted_shape() на метод, який використовується у вашому класі Piece)
         formatted = piece.get_formatted_shape()
 
         for pos in formatted:
             if pos not in accepted_positions:
-                # Дозволяємо фігурі знаходитися вище верхньої межі екрану (y < 0) при її появі
                 if pos[1] > -1:
                     return False
         return True
@@ -43,7 +40,7 @@ class Board:
         Аналог clear_rows(grid, locked) з main.py.
         """
         inc = 0
-        ind = -1  # Додано, щоб уникнути попередження лінтера, про яке ви питали раніше
+        ind = -1
 
         for i in range(self.rows - 1, -1, -1):
             row = self.grid[i]
@@ -63,16 +60,15 @@ class Board:
                     newKey = (x, y + inc)
                     self.locked_positions[newKey] = self.locked_positions.pop(key)
             
-            # Після зсуву обов'язково оновлюємо сітку
             self.update_grid()
             
-        return inc  # Повертаємо кількість видалених рядків для підрахунку очок
+        return inc
 
     def check_game_over(self):
         """
         Перевіряє, чи не досягли заблоковані блоки верхньої межі ігрового поля.
         """
         for (x, y) in self.locked_positions:
-            if y < 1:  # Якщо будь-який блок знаходиться на першому рядку або вище
+            if y < 1:
                 return True
         return False
