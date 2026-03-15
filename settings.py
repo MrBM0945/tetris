@@ -1,0 +1,16 @@
+# константи та налаштування
+
+WIDTH = 1000
+HEIGHT = 850
+
+CELL = 20
+COLS = 12
+ROWS = 22
+
+PASTEL_BLUE = (200,230,255)
+GRID_BG = (235,245,255)
+GRID_LINE = (180,200,220)
+BLACK = (40,40,40)
+
+GRID_X = 50
+GRID_Y = 100
