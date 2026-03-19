@@ -1,78 +1,117 @@
+"""
+Скрипт для тестування логіки ігрового поля (Board);
+"""
+import logging
+import argparse
+from typing import List, Tuple
+
 from board import Board
+import settings
 
-# 1. Створюємо клас-заглушку для фігури (імітуємо piece.py)
+# Налаштування логера
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - [%(levelname)s] - %(message)s',
+    datefmt='%H:%M:%S'
+)
+logger = logging.getLogger(__name__)
+
 class DummyPiece:
-    def __init__(self, positions):
+    """Заглушка для фігури (Тетроміно) для цілей тестування."""
+    def __init__(self, positions: List[Tuple[int, int]], color: Tuple[int, int, int]) -> None:
         self.positions = positions
+        self.color = color
 
-    def get_formatted_shape(self):
-        """
-        У новій версії validate_space очікує, що фігура сама віддасть 
-        свої готові координати (x, y) на полі.
-        """
+    def get_formatted_shape(self) -> List[Tuple[int, int]]:
         return self.positions
 
-# 2. Функція для красивого виводу поля в консоль
-def print_board(board):
-    print("+" + "-" * (board.columns * 2) + "+")
-    for row in board.grid:
-        row_str = "|"
-        for color in row:
-            if color == (0, 0, 0):
-                row_str += " ."  # Порожня клітинка
-            else:
-                row_str += " #"  # Заповнена клітинка
-        row_str += "|"
-        print(row_str)
-    print("+" + "-" * (board.columns * 2) + "+")
-
-
-def run_tests():
-    print("=== ТЕСТ 1: Створення порожнього поля ===")
-    board = Board(columns=10, rows=10) # Зробимо 10x10 для зручності виводу
-    print_board(board)
-
-    print("\n=== ТЕСТ 2: Додавання фігури і перевірка валідності ===")
-    piece = DummyPiece(positions=[(0, 9), (1, 9), (0, 8), (1, 8)]) 
-    p2 = DummyPiece(positions=[(2, 9), (3, 9), (2, 8), (3, 8)])    
-    p3 = DummyPiece(positions=[(4, 9), (5, 9), (6, 9), (7, 9)])
-    p4 = DummyPiece(positions=[(0, 9), (1, 9), (0, 8), (1, 8)]) # Конфліктує з 1-ю фігурою
-
-    # --- Фігура 1 ---
-    print("Валідність розміщення фігури 1:", board.validate_space(piece))
-    for pos in piece.get_formatted_shape():
-        board.locked_positions[pos] = (255, 0, 0)
-    board.update_grid() # Обов'язково оновлюємо сітку, щоб наступні перевірки "бачили" цю фігуру
-
-    # --- Фігура 2 ---
-    print("Валідність розміщення фігури 2:", board.validate_space(p2))
-    for pos in p2.get_formatted_shape():
-        board.locked_positions[pos] = (0, 255, 0)
-    board.update_grid()
-
-    # --- Фігура 3 ---
-    print("Валідність розміщення фігури 3:", board.validate_space(p3))
-    for pos in p3.get_formatted_shape():
-        board.locked_positions[pos] = (0, 0, 255)
-    board.update_grid()
-
-    # --- Фігура 4 ---
-    # Тепер ця перевірка поверне False, оскільки позиції вже зайняті першою фігурою
-    is_p4_valid = board.validate_space(p4)
-    print("Валідність розміщення фігури 4:", is_p4_valid)
+class TestSimulation:
+    """Клас-симулятор для тестування різних сценаріїв на ігровому полі."""
     
-    if is_p4_valid:
-        for pos in p4.get_formatted_shape():
-            board.locked_positions[pos] = (255, 255, 0)
-    else:
-        print(" -> Фігуру 4 пропущено, місце вже зайняте!")
+    def __init__(self, cols: int = settings.COLS, rows: int = settings.ROWS) -> None:
+        self.board = Board(columns=cols, rows=rows)
+        logger.info(f"Створено симуляцію з полем {cols}x{rows}.")
 
-    board.update_grid()
-    print_board(board)
-    
-    print("\n=== Очищення ліній ===")
-    board.clear_rows()
-    print_board(board)
+    def _print_board(self) -> None:
+        """Виводить поточний стан поля в консоль (графічна імітація)."""
+        print("+" + "-" * (self.board.columns * 2) + "+")
+        for row in self.board.grid:
+            row_str = "|"
+            for color in row:
+                if color == settings.BG_COLOR:
+                    row_str += " ."
+                else:
+                    row_str += " #"
+            row_str += "|"
+            print(row_str)
+        print("+" + "-" * (self.board.columns * 2) + "+")
+
+    def _lock_piece(self, piece: DummyPiece) -> None:
+        """Фіксує фігуру на полі."""
+        for pos in piece.get_formatted_shape():
+            self.board.locked_positions[pos] = piece.color
+        self.board.update_grid()
+
+    def test_placement_and_overlap(self) -> None:
+        """Тестує валідність розміщення та колізії (накладання)."""
+        logger.info("=== ТЕСТ 1: Перевірка валідності та накладання ===")
+        # Розміщуємо фігуру на дні
+        p1 = DummyPiece([(0, 19), (1, 19), (2, 19), (3, 19)], (255, 0, 0)) # Лінія внизу
+        
+        is_valid = self.board.validate_space(p1)
+        logger.info(f"Валідність p1 (вільне місце): {is_valid}")
+        assert is_valid, "p1 має бути валідним"
+        self._lock_piece(p1)
+        
+        # Намагаємося поставити туди ж
+        p2 = DummyPiece([(1, 19), (1, 18)], (0, 255, 0))
+        is_valid2 = self.board.validate_space(p2)
+        logger.info(f"Валідність p2 (накладання): {is_valid2}")
+        assert not is_valid2, "p2 має бути невалідним (зайнято)"
+
+        self._print_board()
+
+    def test_out_of_bounds(self) -> None:
+        """Тестує вихід за межі поля."""
+        logger.info("=== ТЕСТ 2: Вихід за межі ===")
+        # Нижня межа - y=20 (немає такої клітинки при rows=20, індекси 0-19)
+        p1 = DummyPiece([(0, 20)], (0, 0, 255))
+        is_valid = self.board.validate_space(p1)
+        logger.info(f"Валідність виходу за межі: {is_valid}")
+        assert not is_valid, "Блок поза межами має бути невалідним (False)"
+
+    def test_clear_lines(self) -> None:
+        """Тестує алгоритм очищення повністю заповнених рядків."""
+        logger.info("=== ТЕСТ 3: Очищення ліній === ")
+        # Заповнюємо весь рядок 18 штучно
+        for i in range(self.board.columns):
+            self.board.locked_positions[(i, 18)] = (255, 255, 0)
+        self.board.update_grid()
+        
+        logger.info("Поле ПЕРЕД очищенням (нижній рядок [19] має лінію, і передостанній [18] заповнений повністю):")
+        self._print_board()
+        
+        cleared_count = self.board.clear_rows()
+        logger.info(f"Очищено {cleared_count} ліній.")
+        
+        logger.info("Поле ПІСЛЯ очищення (всі верхні блоки мали впасти вниз):")
+        self._print_board()
+
+    def run_all(self) -> None:
+        """Запускає весь комплекс тестів."""
+        logger.info("Початок виконання всіх тестів.")
+        self.test_placement_and_overlap()
+        self.test_out_of_bounds()
+        self.test_clear_lines()
+        
+        is_over = self.board.check_game_over()
+        logger.info(f"Статус гри (Check Game Over): {is_over}")
 
 if __name__ == "__main__":
-    run_tests()
+    parser = argparse.ArgumentParser(description="Запуск тестів ядра гри Тетріс.")
+    parser.add_argument("--cols", type=int, default=settings.COLS, help="Кількість колонок")
+    parser.add_argument("--rows", type=int, default=settings.ROWS, help="Кількість рядків")
+    args = parser.parse_args()
+
+    simulator = TestSimulation(cols=args.cols, rows=args.rows)
+    simulator.run_all()
