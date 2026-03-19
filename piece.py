@@ -1,7 +1,3 @@
-"""
-Клас Piece — логічне представлення однієї активної тетріс-фігури.
-"""
-
 from typing import Dict, List, Tuple
 
 from tetrominoes import TETROMINOES, SHAPE_COLORS

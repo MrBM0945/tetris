@@ -1,7 +1,3 @@
-"""
-Створення нових фігур.
-"""
-
 import random
 
 from piece import Piece
