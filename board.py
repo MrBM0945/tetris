@@ -76,12 +76,11 @@ class Board:
         Returns:
             bool: True, якщо позиція валідна (вільна), False в іншому випадку.
         """
-        accepted_positions: List[Tuple[int, int]] = []
-        # Розгортаємо генератори у явні цикли для "надійності" та читабельності
-        for i in range(self.rows):
-            for j in range(self.columns):
-                if self.grid[i][j] == settings.BG_COLOR:
-                    accepted_positions.append((j, i))
+        # Використовуємо list comprehension для оптимізації та читабельності
+        accepted_positions: List[Tuple[int, int]] = [
+            (j, i) for i in range(self.rows) for j in range(self.columns)
+            if self.grid[i][j] == settings.BG_COLOR
+        ]
 
         formatted: List[Tuple[int, int]] = piece.get_formatted_shape()
 
@@ -137,7 +136,4 @@ class Board:
         Returns:
             bool: True, якщо гра закінчена, False в іншому випадку.
         """
-        for (x, y) in self.locked_positions:
-            if y < 1:
-                return True
-        return False
+        return any(y < 1 for _, y in self.locked_positions)
