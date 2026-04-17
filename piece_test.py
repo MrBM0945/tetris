@@ -3,7 +3,7 @@
 """
 
 from piece_factory import create_piece
-from tetrominoes import BASE_SHAPES, TETROMINOES
+from tetrominoes import TetrominoRegistry
 
 
 def print_separator() -> None:
@@ -114,11 +114,11 @@ def test_state_dictionary(shape_type: str) -> None:
 
 
 def test_rotation_count(shape_type: str) -> None:
-    """Перевіряє, що кількість станів повороту відповідає опису в TETROMINOES."""
+    """Перевіряє, що кількість станів повороту відповідає опису фігури в реєстрі."""
     piece = create_piece(shape_type, 0, 0)
 
     print(f"TEST: rotation count for {shape_type}")
-    expected_count = len(TETROMINOES[shape_type])
+    expected_count = TetrominoRegistry.get_definition(shape_type).get_rotation_count()
     actual_count = piece.get_rotation_count()
 
     print("Expected:", expected_count)
@@ -135,7 +135,7 @@ def run_all_tests() -> None:
     print("STARTING ALL PIECE TESTS")
     print("=" * 60)
 
-    for shape_type in BASE_SHAPES:
+    for shape_type in TetrominoRegistry.get_all_shape_types():
         test_initial_state(shape_type)
         test_movement(shape_type)
         test_rotation_count(shape_type)
