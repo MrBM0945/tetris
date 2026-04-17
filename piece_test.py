@@ -1,8 +1,7 @@
 """
 Тестування модуля Piece для всіх 7 базових тетріс-фігур.
 """
-
-from piece_factory import create_piece
+from piece_factory import PieceGenerator
 from tetrominoes import TetrominoRegistry
 
 
@@ -12,7 +11,8 @@ def print_separator() -> None:
 
 def test_initial_state(shape_type: str) -> None:
     """Перевіряє початковий стан фігури."""
-    piece = create_piece(shape_type, 3, 0)
+    generator = PieceGenerator(start_x=3, start_y=0)
+    piece = generator.create_piece(shape_type)
 
     print(f"TEST: initial state for {shape_type}")
     print(piece)
@@ -32,7 +32,8 @@ def test_initial_state(shape_type: str) -> None:
 
 def test_movement(shape_type: str) -> None:
     """Перевіряє рух фігури."""
-    piece = create_piece(shape_type, 3, 0)
+    generator = PieceGenerator(start_x=3, start_y=0)
+    piece = generator.create_piece(shape_type)
 
     print(f"TEST: movement for {shape_type}")
     before = piece.get_formatted_shape()
@@ -52,6 +53,7 @@ def test_movement(shape_type: str) -> None:
     print("After move_down():", down_cells)
 
     assert piece.y == 1, f"{shape_type}: wrong y after move_down"
+
     print("OK")
     print_separator()
 
@@ -61,7 +63,8 @@ def test_rotation_cycle(shape_type: str) -> None:
     Перевіряє, що після повного циклу поворотів
     фігура повертається до початкового стану.
     """
-    piece = create_piece(shape_type, 4, 2)
+    generator = PieceGenerator(start_x=4, start_y=2)
+    piece = generator.create_piece(shape_type)
 
     print(f"TEST: rotation cycle for {shape_type}")
 
@@ -73,11 +76,8 @@ def test_rotation_cycle(shape_type: str) -> None:
     print("Initial cells:", initial_cells)
     print("Rotation count:", rotation_count)
 
-    all_states = []
-
-    for i in range(rotation_count):
+    for _ in range(rotation_count):
         cells = piece.get_formatted_shape()
-        all_states.append(cells)
         print(f"Rotation {piece.rotation}: {cells}")
         piece.rotate()
 
@@ -97,7 +97,8 @@ def test_rotation_cycle(shape_type: str) -> None:
 
 def test_state_dictionary(shape_type: str) -> None:
     """Перевіряє коректність get_state()."""
-    piece = create_piece(shape_type, 5, 1)
+    generator = PieceGenerator(start_x=5, start_y=1)
+    piece = generator.create_piece(shape_type)
 
     print(f"TEST: get_state() for {shape_type}")
     state = piece.get_state()
@@ -115,7 +116,8 @@ def test_state_dictionary(shape_type: str) -> None:
 
 def test_rotation_count(shape_type: str) -> None:
     """Перевіряє, що кількість станів повороту відповідає опису фігури в реєстрі."""
-    piece = create_piece(shape_type, 0, 0)
+    generator = PieceGenerator(start_x=0, start_y=0)
+    piece = generator.create_piece(shape_type)
 
     print(f"TEST: rotation count for {shape_type}")
     expected_count = TetrominoRegistry.get_definition(shape_type).get_rotation_count()
