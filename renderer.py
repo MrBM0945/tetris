@@ -25,7 +25,7 @@ class Renderer:
         for y in range(rows+1):
             pygame.draw.line(self.screen, grid_line, (grid_x, grid_y+y*self.CELL), (grid_x+cols*self.CELL, grid_y+y*self.CELL))
 
-    def draw_gallery(screen, tetrominoes, start_x, start_y, cols_per_row=4, spacing=20):
+    def draw_gallery(self, tetrominoes, start_x, start_y, cols_per_row=4, spacing=20):
         cell_size = 4 * CELL 
         column_width = cell_size + spacing
         row_height = cell_size + spacing
@@ -33,7 +33,7 @@ class Renderer:
         current_x, current_y = start_x, start_y
         count = 0
         for name, shape in tetrominoes.items():
-            draw_shape(screen, shape, name, current_x, current_y)
+            self.draw_shape(shape, name, current_x, current_y)
         
             count += 1
             current_x += column_width

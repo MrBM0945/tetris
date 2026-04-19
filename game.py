@@ -3,7 +3,7 @@ import sys
 import settings
 from board import Board
 from piece_factory import create_random_piece
-import draw
+from renderer import Renderer 
 
 class TetrisGame:
     def __init__(self):
@@ -11,6 +11,7 @@ class TetrisGame:
         self.screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
         pygame.display.set_caption("ShitTetris")
         self.clock = pygame.time.Clock()
+        self.renderer = Renderer(self.screen)
         
         self.board = Board(settings.COLS, settings.ROWS)
         self.current_piece = create_random_piece()
@@ -83,23 +84,24 @@ class TetrisGame:
     def draw(self):
         self.screen.fill((40, 40, 50))
         
-        draw.draw_grid(self.screen, settings.COLS, settings.ROWS, settings.GRID_X, settings.GRID_Y, settings.GRID_BG, settings.GRID_LINE)
+        # Малюємо сітку через рендерер
+        self.renderer.draw_grid(
+            settings.COLS, settings.ROWS, 
+            settings.GRID_X, settings.GRID_Y, 
+            settings.GRID_BG, settings.GRID_LINE
+        )
         
+        # Малюємо заблоковані фігури на дошці
         for (x, y), color in self.board.locked_positions.items():
             if y >= 0:
-                rect = (settings.GRID_X + x * settings.CELL, settings.GRID_Y + y * settings.CELL, settings.CELL, settings.CELL)
-                pygame.draw.rect(self.screen, color, rect)
-                pygame.draw.rect(self.screen, settings.GRID_LINE, rect, 1)
+                self.renderer.draw_shape([(x, y)], None, settings.GRID_X, settings.GRID_Y)
 
-        for x, y in self.current_piece.get_formatted_shape():
-            if y >= 0:
-                rect = (settings.GRID_X + x * settings.CELL, settings.GRID_Y + y * settings.CELL, settings.CELL, settings.CELL)
-                pygame.draw.rect(self.screen, self.current_piece.color, rect)
-                pygame.draw.rect(self.screen, settings.GRID_LINE, rect, 1)
+        # Малюємо активну фігуру
+        shape_coords = self.current_piece.get_formatted_shape()
+        self.renderer.draw_shape(shape_coords, self.current_piece.name, settings.GRID_X, settings.GRID_Y)
                 
         label = self.font.render(f"Score: {self.score}", True, settings.WHITE)
         self.screen.blit(label, (settings.GRID_X + settings.COLS * settings.CELL + 30, settings.GRID_Y + 50))
-
         pygame.display.update()
 
     def run(self):
