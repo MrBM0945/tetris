@@ -1,37 +1,31 @@
 """
 Налаштування та константи для гри Tetris.
 """
-from typing import Tuple
+from typing import Tuple, Dict
 
-# Розміри ігрового поля (в блоках)
-COLS: int = 10
-ROWS: int = 20
-
-# Розміри одного блоку (в пікселях)
-BLOCK_SIZE: int = 30
-
-# Кольори екрану та сітки
-BG_COLOR: Tuple[int, int, int] = (0, 0, 0)
-GRID_COLOR: Tuple[int, int, int] = (128, 128, 128)
-
-# Швидкість гри
+# --- Налаштування екрану та сітки ---
+WIDTH: int = 1000
+HEIGHT: int = 850
 FPS: int = 60
-FALL_SPEED: float = 0.5
 
-WIDTH = 1000
-HEIGHT = 850
-CELL = 30
-COLS = 12
-ROWS = 22
-GRID_X = 50
-GRID_Y = 100
+CELL: int = 30  # Розмір однієї клітинки
+COLS: int = 12
+ROWS: int = 22
 
-GRID_BG = (235, 245, 255)
-GRID_LINE = (180, 200, 220)
-WHITE = (255, 255, 255)
-BLACK = (40, 40, 40)
+# Координати верхнього лівого кута сітки
+GRID_X: int = 50
+GRID_Y: int = 100
 
+# --- Кольорова палітра ---
+BLACK: Tuple[int, int, int] = (40, 40, 40)
+WHITE: Tuple[int, int, int] = (255, 255, 255)
+BG_COLOR: Tuple[int, int, int] = (0, 0, 0)
+GRID_BG: Tuple[int, int, int] = (235, 245, 255)
+GRID_LINE: Tuple[int, int, int] = (180, 200, 220)
 
+FALL_SPEED: float = 0.9 # Швидкість падіння фігур
+
+# --- Кольори фігур  ---
 
 SHAPE_COLORS = {
     'I': (173, 216, 230),      
