@@ -1,6 +1,6 @@
 from typing import Dict, List, Tuple
 
-from tetrominoes import TETROMINOES, SHAPE_COLORS
+from tetrominoes import TetrominoRegistry, TetrominoDefinition
 
 Coordinate = Tuple[int, int]
 Color = Tuple[int, int, int]
@@ -17,14 +17,15 @@ class Piece:
     """
 
     def __init__(self, x: int, y: int, shape_type: str) -> None:
-        if shape_type not in TETROMINOES:
+        if not TetrominoRegistry.has_shape(shape_type):
             raise ValueError(f"Unknown shape type: {shape_type}")
 
         self.x: int = x
         self.y: int = y
-        self.shape_type: str = shape_type
+        self.definition: TetrominoDefinition = TetrominoRegistry.get_definition(shape_type)
+        self.shape_type: str = self.definition.name
         self.rotation: int = 0
-        self.color: Color = SHAPE_COLORS[shape_type]
+        self.color: Color = self.definition.color
 
     def __str__(self) -> str:
         return (
@@ -37,15 +38,14 @@ class Piece:
 
     def get_rotation_count(self) -> int:
         """Повертає кількість станів повороту для поточної фігури."""
-        return len(TETROMINOES[self.shape_type])
+        return self.definition.get_rotation_count()
 
     def get_current_template(self) -> List[Coordinate]:
         """
         Повертає поточний локальний шаблон фігури.
         Наприклад, для T і rotation = 1 поверне другий стан T.
         """
-        states = TETROMINOES[self.shape_type]
-        return states[self.rotation % len(states)]
+        return self.definition.get_state(self.rotation)
 
     def get_formatted_shape(self) -> List[Coordinate]:
         """

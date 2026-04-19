@@ -2,8 +2,8 @@ import pygame
 import sys
 import settings
 from board import Board
-from piece_factory import create_random_piece
-from renderer import Renderer 
+from piece_factory import PieceGenerator
+import draw
 
 class TetrisGame:
     def __init__(self):
@@ -14,7 +14,8 @@ class TetrisGame:
         self.renderer = Renderer(self.screen)
         
         self.board = Board(settings.COLS, settings.ROWS)
-        self.current_piece = create_random_piece()
+        self.piece_generator = PieceGenerator(start_x=3, start_y=0, preview_size=3)
+        self.current_piece = self.piece_generator.get_next_piece()
         
         self.score = 0
         self.running = True
@@ -79,7 +80,7 @@ class TetrisGame:
                     print(f"Game Over! Final Score: {self.score}")
                     self.running = False
                 else:
-                    self.current_piece = create_random_piece()
+                    self.current_piece = self.piece_generator.get_next_piece()
 
     def draw(self):
         self.screen.fill((40, 40, 50))

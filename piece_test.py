@@ -1,9 +1,9 @@
 """
-Тестування модуля Piece для всіх 7 базових тетріс-фігур.
+Тестування модуля Piece та PieceGenerator для базових тетріс-фігур.
 """
 
-from piece_factory import create_piece
-from tetrominoes import BASE_SHAPES, TETROMINOES
+from piece_factory import PieceGenerator
+from tetrominoes import TetrominoRegistry
 
 
 def print_separator() -> None:
@@ -12,7 +12,8 @@ def print_separator() -> None:
 
 def test_initial_state(shape_type: str) -> None:
     """Перевіряє початковий стан фігури."""
-    piece = create_piece(shape_type, 3, 0)
+    generator = PieceGenerator(start_x=3, start_y=0)
+    piece = generator.create_piece(shape_type)
 
     print(f"TEST: initial state for {shape_type}")
     print(piece)
@@ -32,7 +33,8 @@ def test_initial_state(shape_type: str) -> None:
 
 def test_movement(shape_type: str) -> None:
     """Перевіряє рух фігури."""
-    piece = create_piece(shape_type, 3, 0)
+    generator = PieceGenerator(start_x=3, start_y=0)
+    piece = generator.create_piece(shape_type)
 
     print(f"TEST: movement for {shape_type}")
     before = piece.get_formatted_shape()
@@ -52,6 +54,7 @@ def test_movement(shape_type: str) -> None:
     print("After move_down():", down_cells)
 
     assert piece.y == 1, f"{shape_type}: wrong y after move_down"
+
     print("OK")
     print_separator()
 
@@ -61,7 +64,8 @@ def test_rotation_cycle(shape_type: str) -> None:
     Перевіряє, що після повного циклу поворотів
     фігура повертається до початкового стану.
     """
-    piece = create_piece(shape_type, 4, 2)
+    generator = PieceGenerator(start_x=4, start_y=2)
+    piece = generator.create_piece(shape_type)
 
     print(f"TEST: rotation cycle for {shape_type}")
 
@@ -73,11 +77,8 @@ def test_rotation_cycle(shape_type: str) -> None:
     print("Initial cells:", initial_cells)
     print("Rotation count:", rotation_count)
 
-    all_states = []
-
-    for i in range(rotation_count):
+    for _ in range(rotation_count):
         cells = piece.get_formatted_shape()
-        all_states.append(cells)
         print(f"Rotation {piece.rotation}: {cells}")
         piece.rotate()
 
@@ -97,7 +98,8 @@ def test_rotation_cycle(shape_type: str) -> None:
 
 def test_state_dictionary(shape_type: str) -> None:
     """Перевіряє коректність get_state()."""
-    piece = create_piece(shape_type, 5, 1)
+    generator = PieceGenerator(start_x=5, start_y=1)
+    piece = generator.create_piece(shape_type)
 
     print(f"TEST: get_state() for {shape_type}")
     state = piece.get_state()
@@ -114,11 +116,12 @@ def test_state_dictionary(shape_type: str) -> None:
 
 
 def test_rotation_count(shape_type: str) -> None:
-    """Перевіряє, що кількість станів повороту відповідає опису в TETROMINOES."""
-    piece = create_piece(shape_type, 0, 0)
+    """Перевіряє, що кількість станів повороту відповідає опису фігури в реєстрі."""
+    generator = PieceGenerator(start_x=0, start_y=0)
+    piece = generator.create_piece(shape_type)
 
     print(f"TEST: rotation count for {shape_type}")
-    expected_count = len(TETROMINOES[shape_type])
+    expected_count = TetrominoRegistry.get_definition(shape_type).get_rotation_count()
     actual_count = piece.get_rotation_count()
 
     print("Expected:", expected_count)
@@ -130,17 +133,91 @@ def test_rotation_count(shape_type: str) -> None:
     print_separator()
 
 
+def test_generator_create_piece() -> None:
+    """Перевіряє створення конкретної фігури через PieceGenerator."""
+    print("TEST: PieceGenerator create_piece()")
+
+    generator = PieceGenerator(start_x=3, start_y=0)
+    piece = generator.create_piece("T")
+
+    print("Created piece:", piece)
+
+    assert piece.shape_type == "T", "Generator created wrong piece type"
+    assert piece.x == 3, "Generator created piece with wrong x"
+    assert piece.y == 0, "Generator created piece with wrong y"
+    assert piece.rotation == 0, "Generator created piece with wrong rotation"
+
+    print("OK")
+    print_separator()
+
+
+def test_get_next_piece() -> None:
+    """Перевіряє отримання наступної фігури з черги."""
+    print("TEST: PieceGenerator get_next_piece()")
+
+    generator = PieceGenerator(start_x=3, start_y=0, preview_size=3)
+    piece = generator.get_next_piece()
+
+    print("Next piece:", piece)
+
+    assert piece is not None, "Generator returned None"
+    assert TetrominoRegistry.has_shape(piece.shape_type), "Generator returned invalid shape type"
+
+    print("OK")
+    print_separator()
+
+
+def test_preview_queue() -> None:
+    """Перевіряє, що preview-черга має правильний розмір і валідні типи фігур."""
+    print("TEST: PieceGenerator peek_next_shape_types()")
+
+    generator = PieceGenerator(start_x=3, start_y=0, preview_size=3)
+    queue = generator.peek_next_shape_types()
+
+    print("Preview queue:", queue)
+
+    assert len(queue) == 3, "Preview queue has wrong size"
+
+    for shape_type in queue:
+        assert TetrominoRegistry.has_shape(shape_type), f"Invalid shape type in queue: {shape_type}"
+
+    print("OK")
+    print_separator()
+
+
+def test_set_start_position() -> None:
+    """Перевіряє зміну стартової позиції нових фігур."""
+    print("TEST: PieceGenerator set_start_position()")
+
+    generator = PieceGenerator()
+    generator.set_start_position(5, 2)
+
+    piece = generator.create_piece("I")
+    print("Piece after new start position:", piece)
+
+    assert piece.x == 5, "Wrong x after changing start position"
+    assert piece.y == 2, "Wrong y after changing start position"
+
+    print("OK")
+    print_separator()
+
+
 def run_all_tests() -> None:
-    """Запускає всі тести для всіх фігур."""
+    """Запускає всі тести для фігур і генератора."""
     print("STARTING ALL PIECE TESTS")
     print("=" * 60)
 
-    for shape_type in BASE_SHAPES:
+    for shape_type in TetrominoRegistry.get_all_shape_types():
         test_initial_state(shape_type)
         test_movement(shape_type)
         test_rotation_count(shape_type)
         test_rotation_cycle(shape_type)
         test_state_dictionary(shape_type)
+
+    test_generator_create_piece()
+    test_get_next_piece()
+    test_preview_queue()
+    test_set_start_position()
 
     print("ALL TESTS PASSED SUCCESSFULLY")
 
