@@ -98,7 +98,7 @@ class TetrisGame:
 
         # Малюємо активну фігуру
         shape_coords = self.current_piece.get_formatted_shape()
-        self.renderer.draw_shape(shape_coords, self.current_piece.name, settings.GRID_X, settings.GRID_Y)
+        self.renderer.draw_shape(shape_coords, self.current_piece.shape_type, settings.GRID_X, settings.GRID_Y)
                 
         label = self.font.render(f"Score: {self.score}", True, settings.WHITE)
         self.screen.blit(label, (settings.GRID_X + settings.COLS * settings.CELL + 30, settings.GRID_Y + 50))
