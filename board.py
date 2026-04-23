@@ -76,54 +76,50 @@ class Board:
         Returns:
             bool: True, якщо позиція валідна (вільна), False в іншому випадку.
         """
-        # Використовуємо list comprehension для оптимізації та читабельності
-        accepted_positions: List[Tuple[int, int]] = [
-            (j, i) for i in range(self.rows) for j in range(self.columns)
-            if self.grid[i][j] == settings.BG_COLOR
-        ]
-
-        formatted: List[Tuple[int, int]] = piece.get_formatted_shape()
-
-        for pos in formatted:
-            if pos not in accepted_positions:
-                # Дозволяємо фігурам зароджуватися трохи вище ігрового поля (y < 0)
-                if pos[1] > -1:
+        for x, y in piece.get_formatted_shape():
+            # Фігура може спавнитись вище екрану (y < 0)
+            if y < 0:
+                # Головне, щоб вона не виходила за ліву/праву стінку
+                if x < 0 or x >= self.columns:
                     return False
+                continue
+                
+            # Перевірка на вихід за межі поля (стінки та дно)
+            if x < 0 or x >= self.columns or y >= self.rows:
+                return False
+                
+            # Перевірка на зіткнення зі збереженими блоками (пошук у словнику миттєвий)
+            if (x, y) in self.locked_positions:
+                return False
+                
         return True
 
     def clear_rows(self) -> int:
-        """
-        Перевіряє сітку на наявність повністю заповнених рядків, видаляє їх 
-        та зсовує всі вищі блоки вниз.
-        
-        Returns:
-            int: Кількість ліній, які були очищені за цей хід.
-        """
+        """Оптимізоване та правильне очищення рядків."""
         cleared_lines_count: int = 0
-        last_cleared_row_index: int = -1
-
-        # Йдемо знизу вгору
-        for i in range(self.rows - 1, -1, -1):
-            row = self.grid[i]
-            # Якщо в рядку немає порожніх клітинок, значить він заповнений
-            if settings.BG_COLOR not in row:
-                cleared_lines_count += 1
-                last_cleared_row_index = i
-                for j in range(self.columns):
-                    try:
-                        del self.locked_positions[(j, i)]
-                    except KeyError:
-                        continue
-                        
-        if cleared_lines_count > 0:
-            # Сортуємо заблоковані позиції за координатою Y і зсуваємо їх вниз
-            sorted_positions = sorted(list(self.locked_positions), key=lambda pos: pos[1])[::-1]
-            for key in sorted_positions:
-                x, y = key
-                if y < last_cleared_row_index:
-                    new_key = (x, y + cleared_lines_count)
-                    self.locked_positions[new_key] = self.locked_positions.pop(key)
+        
+        row = self.rows - 1
+        while row >= 0:
+            is_full = all((col, row) in self.locked_positions for col in range(self.columns))
             
+            if is_full:
+                cleared_lines_count += 1
+                
+                for col in range(self.columns):
+                    del self.locked_positions[(col, row)]
+
+                new_locked = {}
+                for (x, y), color in self.locked_positions.items():
+                    if y < row:
+                        new_locked[(x, y + 1)] = color
+                    else:
+                        new_locked[(x, y)] = color
+                
+                self.locked_positions = new_locked
+            else:
+                row -= 1
+
+        if cleared_lines_count > 0:
             self.update_grid()
             
         return cleared_lines_count
