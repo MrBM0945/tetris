@@ -3,7 +3,7 @@ import sys
 import settings
 from board import Board
 from piece_factory import PieceGenerator
-import draw
+from renderer import Renderer
 
 class TetrisGame:
     def __init__(self):
