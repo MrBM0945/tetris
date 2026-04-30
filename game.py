@@ -4,6 +4,7 @@ import settings
 from board import Board
 from piece_factory import PieceGenerator
 from renderer import Renderer
+from data_manager import DataManager
 
 class TetrisGame:
     def __init__(self):
@@ -16,6 +17,7 @@ class TetrisGame:
         self.board = Board(settings.COLS, settings.ROWS)
         self.piece_generator = PieceGenerator(start_x=3, start_y=0, preview_size=3)
         self.current_piece = self.piece_generator.get_next_piece()
+        self.data_manager = DataManager()
         
         self.score = 0
         self.running = True
@@ -78,6 +80,7 @@ class TetrisGame:
                 # Перевірка на кінець гри
                 if self.board.check_game_over():
                     print(f"Game Over! Final Score: {self.score}")
+                    self.data_manager.save_new_score(self.score)
                     self.running = False
                 else:
                     self.current_piece = self.piece_generator.get_next_piece()
@@ -85,24 +88,35 @@ class TetrisGame:
     def draw(self):
         self.screen.fill((40, 40, 50))
         
-        # Малюємо сітку через рендерер
         self.renderer.draw_grid(
             settings.COLS, settings.ROWS, 
             settings.GRID_X, settings.GRID_Y, 
             settings.GRID_BG, settings.GRID_LINE
         )
         
-        # Малюємо заблоковані фігури на дошці
+        # Малюємо заблоковані кубики знизу
         for (x, y), color in self.board.locked_positions.items():
             if y >= 0:
-                self.renderer.draw_shape([(x, y)], None, settings.GRID_X, settings.GRID_Y)
+                self.renderer.draw_shape([(x, y)], color, settings.GRID_X, settings.GRID_Y)
 
-        # Малюємо активну фігуру
+        # Малюємо активну фігуру (ту, що падає)
         shape_coords = self.current_piece.get_formatted_shape()
-        self.renderer.draw_shape(shape_coords, self.current_piece.shape_type, settings.GRID_X, settings.GRID_Y)
+        self.renderer.draw_shape(shape_coords, self.current_piece.color, settings.GRID_X, settings.GRID_Y)
                 
+        # Текст інтерфейсу
         label = self.font.render(f"Score: {self.score}", True, settings.WHITE)
         self.screen.blit(label, (settings.GRID_X + settings.COLS * settings.CELL + 30, settings.GRID_Y + 50))
+        
+        # Вивід рекорду
+        high_score = self.data_manager.high_score_data["score"]
+        hs_date = self.data_manager.high_score_data["date"]
+        
+        hs_label = self.font.render(f"High Score: {high_score}", True, (255, 215, 0))
+        self.screen.blit(hs_label, (settings.GRID_X + settings.COLS * settings.CELL + 30, settings.GRID_Y + 100))
+        
+        date_label = self.font.render(f"Date: {hs_date}", True, settings.WHITE)
+        self.screen.blit(date_label, (settings.GRID_X + settings.COLS * settings.CELL + 30, settings.GRID_Y + 130))
+
         pygame.display.update()
 
     def run(self):
@@ -113,7 +127,3 @@ class TetrisGame:
                 self.draw()
         
         pygame.quit()
-
-if __name__ == "__main__":
-    game = TetrisGame()
-    game.run()

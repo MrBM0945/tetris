@@ -11,8 +11,7 @@ class Renderer:
     def shape_width(self, shape):
         return max(block[0] for block in shape) + 1
 
-    def draw_shape(self, shape, shape_name, x, y):
-        color = SHAPE_COLORS.get(shape_name, (200, 200, 200))
+    def draw_shape(self, shape, color, x, y):
         for block in shape:
             rect = (x + block[0] * CELL, y + block[1] * CELL, CELL, CELL)
             pygame.draw.rect(self.screen, color, rect)
