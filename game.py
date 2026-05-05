@@ -10,6 +10,7 @@ class TetrisGame:
     def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
+       
         pygame.display.set_caption("ShitTetris")
         self.clock = pygame.time.Clock()
         self.renderer = Renderer(self.screen)
@@ -87,6 +88,9 @@ class TetrisGame:
 
     def draw(self):
         self.screen.fill((40, 40, 50))
+        
+        self.renderer = Renderer(self.screen)
+        self.renderer.draw_title()
         
         self.renderer.draw_grid(
             settings.COLS, settings.ROWS, 

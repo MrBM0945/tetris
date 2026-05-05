@@ -1,9 +1,28 @@
+from turtle import title
+
 import pygame
+import settings
+
 from settings import CELL, BLACK, SHAPE_COLORS
 
 class Renderer:
     def __init__(self, screen): 
         self.screen = screen
+        self.title_font = pygame.font.SysFont("arialblack", 60)
+     
+    def draw_title(self):
+        title = "TETRIS"
+        
+        panel_x = settings.GRID_X + settings.COLS * settings.CELL + 20
+
+        x = panel_x + 60  
+        y = 40            
+        
+        shadow = self.title_font.render(title, True, (0, 0, 0))
+        self.screen.blit(shadow, (x + 4, y + 4))
+
+        text = self.title_font.render(title, True, (0, 220, 255))
+        self.screen.blit(text, (x, y))
 
     def adjust_color(self, color, amount):
         return tuple(max(0, min(255, c + amount)) for c in color)
