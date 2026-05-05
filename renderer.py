@@ -24,10 +24,10 @@ class Renderer:
 
             rect = pygame.Rect(bx, by, CELL, CELL)
 
-            # основа
+        
             pygame.draw.rect(self.screen, color, rect)
 
-            # 🔆 верх
+          
             pygame.draw.polygon(self.screen, light, [
                 (bx, by),
                 (bx + CELL, by),
@@ -35,7 +35,7 @@ class Renderer:
                 (bx + 4, by + 4)
             ])
 
-            # 🔆 ліва сторона
+
             pygame.draw.polygon(self.screen, light, [
                 (bx, by),
                 (bx, by + CELL),
@@ -43,7 +43,7 @@ class Renderer:
                 (bx + 4, by + 4)
             ])
 
-            # 🌑 низ
+   
             pygame.draw.polygon(self.screen, dark, [
                 (bx, by + CELL),
                 (bx + CELL, by + CELL),
@@ -51,7 +51,7 @@ class Renderer:
                 (bx + 4, by + CELL - 4)
             ])
 
-            # 🌑 права сторона
+    
             pygame.draw.polygon(self.screen, dark, [
                 (bx + CELL, by),
                 (bx + CELL, by + CELL),
@@ -63,11 +63,64 @@ class Renderer:
             pygame.draw.rect(self.screen, BLACK, rect, 1)
 
     def draw_grid(self, cols, rows, grid_x, grid_y, grid_bg, grid_line):
-        pygame.draw.rect(self.screen, grid_bg, (grid_x, grid_y, cols * CELL, rows * CELL))
+        width = cols * CELL
+        height = rows * CELL
+        
+        for i in range(rows):
+            shade = int(235 - i * 2)  # зверху світліше
+            color = (shade, shade + 10, shade + 20)
+            pygame.draw.rect(
+                self.screen,
+                color,
+                (grid_x, grid_y + i * CELL, width, CELL)
+            )
+
+        shadow_color = (200, 210, 220)
+        pygame.draw.rect(self.screen, shadow_color, (grid_x, grid_y, width, height), 4)
+
+        for x in range(cols):
+           if x % 2 == 0:
+               pygame.draw.rect(
+               self.screen,
+               (245, 250, 255),
+                (grid_x + x * CELL, grid_y, CELL, height),
+               0
+        )
+               
+        for x in range(cols):
+            for y in range(rows):
+                if (x + y) % 2 == 0:
+                    pygame.draw.rect(
+                        self.screen,
+                        (228, 238, 248),
+                        (grid_x + x * CELL, grid_y + y * CELL, CELL, CELL),
+                        0
+                        
+        )
+               
         for x in range(cols+1):
-            pygame.draw.line(self.screen, grid_line, (grid_x+ x * CELL, grid_y), (grid_x + x * CELL, grid_y+rows *CELL))
+            pygame.draw.line(self.screen, grid_line,
+                (grid_x + x * CELL, grid_y),
+                (grid_x + x * CELL, grid_y + rows * CELL),
+                2
+        ) 
+
         for y in range(rows+1):
-            pygame.draw.line(self.screen, grid_line, (grid_x, grid_y+y*CELL), (grid_x+cols * CELL, grid_y+ y * CELL))
+            pygame.draw.line(self.screen, grid_line,
+                (grid_x, grid_y + y * CELL),
+                (grid_x + cols * CELL, grid_y + y * CELL),
+                2
+            )
+        
+
+        
+
+        pygame.draw.rect(
+            self.screen,
+            (120, 150, 180),
+            (grid_x, grid_y, width, height),
+            3
+    )
 
     def draw_gallery(self, tetrominoes, start_x, start_y, cols_per_row=4, spacing=20):
         cell_size = 4 * CELL 
