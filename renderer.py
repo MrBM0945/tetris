@@ -5,6 +5,9 @@ class Renderer:
     def __init__(self, screen): 
         self.screen = screen
 
+    def adjust_color(self, color, amount):
+        return tuple(max(0, min(255, c + amount)) for c in color)
+
     def shape_height(self, shape):
         return max(block[1] for block in shape) + 1
 
@@ -12,10 +15,52 @@ class Renderer:
         return max(block[0] for block in shape) + 1
 
     def draw_shape(self, shape, color, x, y):
+        light = self.adjust_color(color, 40)
+        dark = self.adjust_color(color, -40)
+
         for block in shape:
-            rect = (x + block[0] * CELL, y + block[1] * CELL, CELL, CELL)
+            bx = x + block[0] * CELL
+            by = y + block[1] * CELL
+
+            rect = pygame.Rect(bx, by, CELL, CELL)
+
+            # основа
             pygame.draw.rect(self.screen, color, rect)
-            pygame.draw.rect(self.screen, BLACK, rect, 2)
+
+            # 🔆 верх
+            pygame.draw.polygon(self.screen, light, [
+                (bx, by),
+                (bx + CELL, by),
+                (bx + CELL - 4, by + 4),
+                (bx + 4, by + 4)
+            ])
+
+            # 🔆 ліва сторона
+            pygame.draw.polygon(self.screen, light, [
+                (bx, by),
+                (bx, by + CELL),
+                (bx + 4, by + CELL - 4),
+                (bx + 4, by + 4)
+            ])
+
+            # 🌑 низ
+            pygame.draw.polygon(self.screen, dark, [
+                (bx, by + CELL),
+                (bx + CELL, by + CELL),
+                (bx + CELL - 4, by + CELL - 4),
+                (bx + 4, by + CELL - 4)
+            ])
+
+            # 🌑 права сторона
+            pygame.draw.polygon(self.screen, dark, [
+                (bx + CELL, by),
+                (bx + CELL, by + CELL),
+                (bx + CELL - 4, by + CELL - 4),
+                (bx + CELL - 4, by + 4)
+            ])
+
+            # рамка
+            pygame.draw.rect(self.screen, BLACK, rect, 1)
 
     def draw_grid(self, cols, rows, grid_x, grid_y, grid_bg, grid_line):
         pygame.draw.rect(self.screen, grid_bg, (grid_x, grid_y, cols * CELL, rows * CELL))
@@ -31,9 +76,11 @@ class Renderer:
 
         current_x, current_y = start_x, start_y
         count = 0
+
         for name, shape in tetrominoes.items():
-            self.draw_shape(shape, name, current_x, current_y)
-        
+            color = SHAPE_COLORS.get(name, (200, 200, 200))
+            self.draw_shape(shape, color, current_x, current_y)
+
             count += 1
             current_x += column_width
 

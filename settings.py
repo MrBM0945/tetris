@@ -23,7 +23,7 @@ BG_COLOR: Tuple[int, int, int] = (0, 0, 0)
 GRID_BG: Tuple[int, int, int] = (235, 245, 255)
 GRID_LINE: Tuple[int, int, int] = (180, 200, 220)
 
-FALL_SPEED: float = 0.9 # Швидкість падіння фігур
+FALL_SPEED: float = 0.4 # Швидкість падіння фігур
 
 # --- Кольори фігур  ---
 
