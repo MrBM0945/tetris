@@ -1,11 +1,14 @@
 import pygame
 import sys
+from piece import Piece
 import settings
 from board import Board
 from piece_factory import PieceGenerator
 from renderer import Renderer
 from data_manager import DataManager
 from tetrominoes import TetrominoRegistry
+from piece_factory import PieceGenerator
+from piece import Piece
 
 class TetrisGame:
     def __init__(self):
@@ -163,6 +166,34 @@ class TetrisGame:
         for (x, y), color in self.board.locked_positions.items():
             if y >= 0:
                 self.renderer.draw_shape([(x, y)], color, settings.GRID_X, settings.GRID_Y)
+        ghost_piece = Piece(
+            self.current_piece.x,
+            self.current_piece.y,
+            self.current_piece.shape_type
+        )
+
+        ghost_piece.rotation = self.current_piece.rotation
+
+        while self.board.validate_space(ghost_piece):
+            ghost_piece.move_down()
+
+        ghost_piece.move_up()
+
+        ghost_coords = ghost_piece.get_formatted_shape()
+
+        ghost_color = (
+            self.current_piece.color[0] // 3,
+            self.current_piece.color[1] // 3,
+            self.current_piece.color[2] // 3
+        )
+
+        self.renderer.draw_shape(
+            ghost_coords,
+            ghost_color,
+            settings.GRID_X,
+            settings.GRID_Y
+        )
+
 
         # Малюємо активну фігуру (ту, що падає)
         shape_coords = self.current_piece.get_formatted_shape()
