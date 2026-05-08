@@ -143,7 +143,7 @@ class TetrisGame:
                 if self.board.check_game_over():
                     print(f"Game Over! Final Score: {self.score}")
                     self.data_manager.save_new_score(self.score)
-                    self.running = False
+                    self.game_over = True
                 else:
                     self.current_piece = self.piece_generator.get_next_piece()
 
@@ -261,7 +261,14 @@ class TetrisGame:
             overlay.fill((0, 0, 0))
             self.screen.blit(overlay, (0, 0))
             game_over_font = pygame.font.SysFont("arialblack", 50)
-
+            game_over_label = game_over_font.render(
+                "GAME OVER",
+                True,
+                settings.WHITE
+            )
+            game_over_x = settings.WIDTH // 2 - game_over_label.get_width() // 2
+            game_over_y = settings.HEIGHT // 2 - 120
+            
             result_label = game_over_font.render(
                 f"Final Score: {self.score}",
                 True,
@@ -279,7 +286,7 @@ class TetrisGame:
 
             exit_x = settings.WIDTH // 2 - exit_label.get_width() // 2
             exit_y = settings.HEIGHT // 2 + 30
-
+            self.screen.blit(game_over_label, (game_over_x, game_over_y))
             self.screen.blit(result_label, (result_x, result_y))
             self.screen.blit(exit_label, (exit_x, exit_y))
         pygame.display.update()
