@@ -43,18 +43,19 @@ class TetrisGame:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     self.current_piece.move_left()
+
                     if not self.board.validate_space(self.current_piece):
                         self.current_piece.move_right()
+
                 elif event.key == pygame.K_RIGHT:
                     self.current_piece.move_right()
+
                     if not self.board.validate_space(self.current_piece):
                         self.current_piece.move_left()
-                elif event.key == pygame.K_DOWN:
-                    self.current_piece.move_down()
-                    if not self.board.validate_space(self.current_piece):
-                        self.current_piece.move_up()
+
                 elif event.key == pygame.K_UP:
                     self.current_piece.rotate()
+
                     if not self.board.validate_space(self.current_piece):
                         self.current_piece.rotate_back()
 
@@ -75,7 +76,12 @@ class TetrisGame:
 
             self.fall_interval = 1000 / self.fall_speed
 
-        if self.fall_time >= self.fall_interval:
+        keys = pygame.key.get_pressed()
+
+        current_interval = self.fall_interval
+        if keys[pygame.K_DOWN]:
+            current_interval = self.fall_interval / settings.SOFT_DROP_MULTIPLIER
+        if self.fall_time >= current_interval:
             self.fall_time = 0
             self.current_piece.move_down()
             
