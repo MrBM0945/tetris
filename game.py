@@ -5,13 +5,14 @@ from board import Board
 from piece_factory import PieceGenerator
 from renderer import Renderer
 from data_manager import DataManager
+from tetrominoes import TetrominoRegistry
 
 class TetrisGame:
     def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
        
-        pygame.display.set_caption("ShitTetris")
+        pygame.display.set_caption("Tetris")
         self.clock = pygame.time.Clock()
         self.renderer = Renderer(self.screen)
         
@@ -120,7 +121,29 @@ class TetrisGame:
         
         date_label = self.font.render(f"Date: {hs_date}", True, settings.WHITE)
         self.screen.blit(date_label, (settings.GRID_X + settings.COLS * settings.CELL + 30, settings.GRID_Y + 130))
+        next_label = self.font.render("Next:", True, settings.WHITE)
+        self.screen.blit(
+            next_label,
+            (settings.GRID_X + settings.COLS * settings.CELL + 30, settings.GRID_Y + 190)
+        )
 
+        next_shapes = self.piece_generator.peek_next_shape_types()
+
+        if next_shapes:
+            next_shape_type = next_shapes[0]
+            next_definition = TetrominoRegistry.get_definition(next_shape_type)
+            next_template = next_definition.get_state(0)
+
+            preview_x = settings.GRID_X + settings.COLS * settings.CELL + 70
+            preview_y = settings.GRID_Y + 240
+
+            self.renderer.draw_shape(
+                next_template,
+                next_definition.color,
+                preview_x,
+                preview_y
+            )
+        
         pygame.display.update()
 
     def run(self):
