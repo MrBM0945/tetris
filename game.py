@@ -182,12 +182,12 @@ class TetrisGame:
         ghost_coords = ghost_piece.get_formatted_shape()
 
         ghost_color = (
-            self.current_piece.color[0] // 3,
-            self.current_piece.color[1] // 3,
-            self.current_piece.color[2] // 3
+            (self.current_piece.color[0] + 255 * 3) // 4,
+            (self.current_piece.color[1] + 255 * 3) // 4,
+            (self.current_piece.color[2] + 255 * 3) // 4
         )
 
-        self.renderer.draw_shape(
+        self.renderer.draw_ghost_shape(
             ghost_coords,
             ghost_color,
             settings.GRID_X,

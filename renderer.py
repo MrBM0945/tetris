@@ -80,6 +80,22 @@ class Renderer:
 
             # рамка
             pygame.draw.rect(self.screen, BLACK, rect, 1)
+            
+    def draw_ghost_shape(self, shape, color, x, y):
+        for block in shape:
+            bx = x + block[0] * CELL
+            by = y + block[1] * CELL
+
+            rect = pygame.Rect(bx, by, CELL, CELL)
+
+            pygame.draw.rect(self.screen, color, rect)
+
+            pygame.draw.rect(
+                self.screen,
+                (220, 220, 220),
+                rect,
+                1
+            )
 
     def draw_grid(self, cols, rows, grid_x, grid_y, grid_bg, grid_line):
         width = cols * CELL
