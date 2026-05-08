@@ -23,6 +23,7 @@ class TetrisGame:
         
         self.score = 0
         self.running = True
+        self.paused = False
         
         if not self.board.validate_space(self.current_piece):
             print("Game Over at start!")
@@ -72,11 +73,16 @@ class TetrisGame:
                         print("Game Over after hold!")
                         self.data_manager.save_new_score(self.score)
                         self.running = False
+                
+                elif event.key == pygame.K_p:
+                    self.paused = not self.paused
                         
                 
 
     def update(self):
         if not self.running:
+            return
+        if self.paused:
             return
 
         dt = self.clock.tick(settings.FPS)
@@ -202,6 +208,19 @@ class TetrisGame:
                 preview_y
             )
         
+        if self.paused:
+            pause_font = pygame.font.SysFont("arialblack", 60)
+
+            pause_label = pause_font.render(
+                "PAUSED",
+                True,
+                (255, 255, 255)
+            )
+
+            pause_x = settings.WIDTH // 2 - pause_label.get_width() // 2
+            pause_y = settings.HEIGHT // 2 - pause_label.get_height() // 2
+
+            self.screen.blit(pause_label, (pause_x, pause_y))
         pygame.display.update()
 
     def run(self):
