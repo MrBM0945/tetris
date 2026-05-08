@@ -66,6 +66,13 @@ class TetrisGame:
                     if not self.board.validate_space(self.current_piece):
                         self.current_piece.rotate_back()
                         
+                elif event.key == pygame.K_c:
+                    self.current_piece = self.piece_generator.hold_piece(self.current_piece)
+                    if not self.board.validate_space(self.current_piece):
+                        print("Game Over after hold!")
+                        self.data_manager.save_new_score(self.score)
+                        self.running = False
+                        
                 
 
     def update(self):
@@ -149,10 +156,33 @@ class TetrisGame:
         
         date_label = self.font.render(f"Date: {hs_date}", True, settings.WHITE)
         self.screen.blit(date_label, (settings.GRID_X + settings.COLS * settings.CELL + 30, settings.GRID_Y + 130))
+
+        hold_label = self.font.render("Hold:", True, settings.WHITE)
+        self.screen.blit(
+            hold_label,
+            (settings.GRID_X + settings.COLS * settings.CELL + 30, settings.GRID_Y + 190)
+        )
+
+        held_shape_type = self.piece_generator.get_held_shape_type()
+
+        if held_shape_type is not None:
+            held_definition = TetrominoRegistry.get_definition(held_shape_type)
+            held_template = held_definition.get_state(0)
+
+            hold_x = settings.GRID_X + settings.COLS * settings.CELL + 70
+            hold_y = settings.GRID_Y + 240
+
+            self.renderer.draw_shape(
+                held_template,
+                held_definition.color,
+                hold_x,
+                hold_y
+            )
+
         next_label = self.font.render("Next:", True, settings.WHITE)
         self.screen.blit(
             next_label,
-            (settings.GRID_X + settings.COLS * settings.CELL + 30, settings.GRID_Y + 190)
+            (settings.GRID_X + settings.COLS * settings.CELL + 30, settings.GRID_Y + 350)
         )
 
         next_shapes = self.piece_generator.peek_next_shape_types()
@@ -163,7 +193,7 @@ class TetrisGame:
             next_template = next_definition.get_state(0)
 
             preview_x = settings.GRID_X + settings.COLS * settings.CELL + 70
-            preview_y = settings.GRID_Y + 240
+            preview_y = settings.GRID_Y + 400
 
             self.renderer.draw_shape(
                 next_template,
