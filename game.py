@@ -11,7 +11,7 @@ class TetrisGame:
         pygame.init()
         self.screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
        
-        pygame.display.set_caption("ShitTetris")
+        pygame.display.set_caption("Tetris")
         self.clock = pygame.time.Clock()
         self.renderer = Renderer(self.screen)
         
