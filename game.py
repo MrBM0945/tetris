@@ -52,12 +52,20 @@ class TetrisGame:
 
                     if not self.board.validate_space(self.current_piece):
                         self.current_piece.move_left()
+                        
+                elif event.key == pygame.K_SPACE:
+                    while self.board.validate_space(self.current_piece):
+                        self.current_piece.move_down()
+                    self.current_piece.move_up()
+                    self.fall_time = self.fall_speed
 
                 elif event.key == pygame.K_UP:
                     self.current_piece.rotate()
 
                     if not self.board.validate_space(self.current_piece):
                         self.current_piece.rotate_back()
+                        
+                
 
     def update(self):
         if not self.running:
