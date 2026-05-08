@@ -11,7 +11,7 @@ class TetrisGame:
         pygame.init()
         self.screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
        
-        pygame.display.set_caption("ShitTetris")
+        pygame.display.set_caption("Tetris")
         self.clock = pygame.time.Clock()
         self.renderer = Renderer(self.screen)
         
@@ -28,7 +28,11 @@ class TetrisGame:
             self.running = False
 
         self.fall_time = 0
-        self.fall_speed = settings.FALL_SPEED * 1000 # переводимо в мілісекунди
+        self.speed_time = 0
+
+        self.fall_speed = settings.FALL_SPEED
+        self.fall_interval = 1000 / self.fall_speed
+
         self.font = pygame.font.SysFont("comicsans", 30)
 
     def handle_events(self):
@@ -39,18 +43,19 @@ class TetrisGame:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     self.current_piece.move_left()
+
                     if not self.board.validate_space(self.current_piece):
                         self.current_piece.move_right()
+
                 elif event.key == pygame.K_RIGHT:
                     self.current_piece.move_right()
+
                     if not self.board.validate_space(self.current_piece):
                         self.current_piece.move_left()
-                elif event.key == pygame.K_DOWN:
-                    self.current_piece.move_down()
-                    if not self.board.validate_space(self.current_piece):
-                        self.current_piece.move_up()
+
                 elif event.key == pygame.K_UP:
                     self.current_piece.rotate()
+
                     if not self.board.validate_space(self.current_piece):
                         self.current_piece.rotate_back()
 
@@ -60,8 +65,23 @@ class TetrisGame:
 
         dt = self.clock.tick(settings.FPS)
         self.fall_time += dt
+        self.speed_time += dt
 
-        if self.fall_time >= self.fall_speed:
+        if self.speed_time >= settings.SPEED_INCREASE_INTERVAL * 1000:
+            self.speed_time = 0
+            self.fall_speed += self.fall_speed * settings.SPEED_INCREASE_PERCENT
+            
+            if self.fall_speed > settings.MAX_FALL_SPEED:
+                self.fall_speed = settings.MAX_FALL_SPEED
+
+            self.fall_interval = 1000 / self.fall_speed
+
+        keys = pygame.key.get_pressed()
+
+        current_interval = self.fall_interval
+        if keys[pygame.K_DOWN]:
+            current_interval = self.fall_interval / settings.SOFT_DROP_MULTIPLIER
+        if self.fall_time >= current_interval:
             self.fall_time = 0
             self.current_piece.move_down()
             
