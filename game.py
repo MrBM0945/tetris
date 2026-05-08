@@ -28,7 +28,11 @@ class TetrisGame:
             self.running = False
 
         self.fall_time = 0
-        self.fall_speed = settings.FALL_SPEED * 1000 # переводимо в мілісекунди
+        self.speed_time = 0
+
+        self.fall_speed = settings.FALL_SPEED
+        self.fall_interval = 1000 / self.fall_speed
+
         self.font = pygame.font.SysFont("comicsans", 30)
 
     def handle_events(self):
@@ -60,8 +64,18 @@ class TetrisGame:
 
         dt = self.clock.tick(settings.FPS)
         self.fall_time += dt
+        self.speed_time += dt
 
-        if self.fall_time >= self.fall_speed:
+        if self.speed_time >= settings.SPEED_INCREASE_INTERVAL * 1000:
+            self.speed_time = 0
+            self.fall_speed += self.fall_speed * settings.SPEED_INCREASE_PERCENT
+            
+            if self.fall_speed > settings.MAX_FALL_SPEED:
+                self.fall_speed = settings.MAX_FALL_SPEED
+
+            self.fall_interval = 1000 / self.fall_speed
+
+        if self.fall_time >= self.fall_interval:
             self.fall_time = 0
             self.current_piece.move_down()
             

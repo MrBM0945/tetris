@@ -23,7 +23,10 @@ BG_COLOR: Tuple[int, int, int] = (0, 0, 0)
 GRID_BG: Tuple[int, int, int] = (235, 245, 255)
 GRID_LINE: Tuple[int, int, int] = (180, 200, 220)
 
-FALL_SPEED: float = 0.4 # Швидкість падіння фігур
+FALL_SPEED: float = 1.2  # Початкова швидкість падіння: клітинок за секунду 
+SPEED_INCREASE_INTERVAL: int = 30  # Кожні 30 секунд
+SPEED_INCREASE_PERCENT: float = 0.10  # Збільшення на 10%
+MAX_FALL_SPEED: float = 2.0  # Максимальна швидкість падіння
 
 # --- Кольори фігур  ---
 
