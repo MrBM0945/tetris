@@ -24,6 +24,7 @@ class TetrisGame:
         self.score = 0
         self.running = True
         self.paused = False
+        self.game_over = False
         
         if not self.board.validate_space(self.current_piece):
             print("Game Over at start!")
@@ -43,6 +44,20 @@ class TetrisGame:
                 self.running = False
             
             if event.type == pygame.KEYDOWN:
+                
+                if event.key == pygame.K_ESCAPE:
+                    print(f"Game exited! Final Score: {self.score}")
+                    self.data_manager.save_new_score(self.score)
+                    self.game_over = True
+                    continue
+                
+                if self.game_over and event.key == pygame.K_x:
+                    self.running = False
+                    continue
+
+                if self.game_over:
+                    continue
+                    
                 if event.key == pygame.K_LEFT:
                     self.current_piece.move_left()
 
@@ -76,12 +91,16 @@ class TetrisGame:
                 
                 elif event.key == pygame.K_p:
                     self.paused = not self.paused
-                        
+                      
                 
 
     def update(self):
         if not self.running:
             return
+
+        if self.game_over:
+            return
+
         if self.paused:
             return
 
@@ -209,6 +228,10 @@ class TetrisGame:
             )
         
         if self.paused:
+            overlay = pygame.Surface((settings.WIDTH, settings.HEIGHT))
+            overlay.set_alpha(180)
+            overlay.fill((0, 0, 0))
+            self.screen.blit(overlay, (0, 0))
             pause_font = pygame.font.SysFont("arialblack", 60)
 
             pause_label = pause_font.render(
@@ -216,11 +239,49 @@ class TetrisGame:
                 True,
                 (255, 255, 255)
             )
+            continue_label = self.font.render(
+                "Press P to continue",
+                True,
+                settings.WHITE
+            )
 
             pause_x = settings.WIDTH // 2 - pause_label.get_width() // 2
             pause_y = settings.HEIGHT // 2 - pause_label.get_height() // 2
 
             self.screen.blit(pause_label, (pause_x, pause_y))
+            continue_x = settings.WIDTH // 2 - continue_label.get_width() // 2
+            continue_y = settings.HEIGHT // 2 + 50
+            self.screen.blit(continue_label, (continue_x, continue_y))
+            
+        
+           
+        if self.game_over:
+            overlay = pygame.Surface((settings.WIDTH, settings.HEIGHT))
+            overlay.set_alpha(180)
+            overlay.fill((0, 0, 0))
+            self.screen.blit(overlay, (0, 0))
+            game_over_font = pygame.font.SysFont("arialblack", 50)
+
+            result_label = game_over_font.render(
+                f"Final Score: {self.score}",
+                True,
+                settings.WHITE
+            )
+
+            exit_label = self.font.render(
+                "Press X to exit",
+                True,
+                settings.WHITE
+            )
+
+            result_x = settings.WIDTH // 2 - result_label.get_width() // 2
+            result_y = settings.HEIGHT // 2 - 40
+
+            exit_x = settings.WIDTH // 2 - exit_label.get_width() // 2
+            exit_y = settings.HEIGHT // 2 + 30
+
+            self.screen.blit(result_label, (result_x, result_y))
+            self.screen.blit(exit_label, (exit_x, exit_y))
         pygame.display.update()
 
     def run(self):
