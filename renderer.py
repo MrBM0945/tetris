@@ -27,6 +27,21 @@ class Renderer:
     def adjust_color(self, color, amount):
         return tuple(max(0, min(255, c + amount)) for c in color)
 
+    def draw_game_stats(self, start_time_str, duration_str):
+        """Відображає час початку та тривалість гри."""
+        stats_font = pygame.font.SysFont("comicsans", 25)
+        
+
+        base_x = settings.GRID_X + settings.COLS * settings.CELL + 30
+        base_y = settings.GRID_Y + 160 
+
+        start_label = stats_font.render(f"Started: {start_time_str}", True, settings.WHITE)
+        self.screen.blit(start_label, (base_x, base_y))
+
+        duration_label = stats_font.render(f"Duration: {duration_str}", True, (0, 255, 100))
+        self.screen.blit(duration_label, (base_x, base_y + 30))
+
+
     def shape_height(self, shape):
         return max(block[1] for block in shape) + 1
 
