@@ -204,15 +204,23 @@ class TetrisGame:
         self.screen.blit(label, (settings.GRID_X + settings.COLS * settings.CELL + 30, settings.GRID_Y + 50))
         
         
-
         high_score = self.data_manager.high_score_data["score"]
-        hs_date = self.data_manager.high_score_data["date"]
         
         hs_label = self.font.render(f"High Score: {high_score}", True, (255, 215, 0))
         self.screen.blit(hs_label, (settings.GRID_X + settings.COLS * settings.CELL + 30, settings.GRID_Y + 100))
         
-        date_label = self.font.render(f"Date: {hs_date}", True, settings.WHITE)
-        self.screen.blit(date_label, (settings.GRID_X + settings.COLS * settings.CELL + 30, settings.GRID_Y + 130))
+        current_date = datetime.now().strftime("%d.%m.%Y")
+
+        date_label = self.font.render(
+            f"Date: {current_date}",
+            True,
+            settings.WHITE
+        )
+        self.screen.blit(date_label,
+            (
+            settings.GRID_X + settings.COLS * settings.CELL + 30,
+            settings.GRID_Y + 130)
+       )
         
         start_time_str = self.start_time.strftime("%H:%M:%S")
         minutes = self.elapsed_seconds // 60
