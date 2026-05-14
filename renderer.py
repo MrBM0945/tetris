@@ -11,6 +11,8 @@ class Renderer:
         # --- Кешовані шрифти (створюються один раз) ---
         self.title_font = pygame.font.SysFont("arialblack", 60)
         self.stats_font = pygame.font.SysFont("comicsans", 25)
+        self.medium_font = pygame.font.SysFont("arialblack", 50)
+        self.font = pygame.font.SysFont("comicsans", 30)
 
         # --- Кешований фон сітки (рендериться один раз) ---
         self._grid_surface = self._build_grid_surface(
@@ -180,11 +182,15 @@ class Renderer:
     def draw_pause(self):
         self.screen.blit(self._overlay, (0, 0))
         label = self.title_font.render("PAUSED", True, settings.WHITE)
+        continue_label = self.font.render("Press P to continue", True, settings.WHITE)
         self.screen.blit(label, (settings.WIDTH // 2 - label.get_width() // 2, settings.HEIGHT // 2 - 50))
+        self.screen.blit(continue_label, (settings.WIDTH // 2 - continue_label.get_width() // 2, settings.HEIGHT // 2 + 20))
 
     def draw_game_over(self, score):
         self.screen.blit(self._overlay, (0, 0))
         go_label = self.medium_font.render("GAME OVER", True, settings.WHITE)
+        exit_label = self.font.render("Press X to exit", True, settings.WHITE)
         sc_label = self.medium_font.render(f"Score: {score}", True, settings.WHITE)
         self.screen.blit(go_label, (settings.WIDTH // 2 - go_label.get_width() // 2, settings.HEIGHT // 2 - 100))
         self.screen.blit(sc_label, (settings.WIDTH // 2 - sc_label.get_width() // 2, settings.HEIGHT // 2))
+        self.screen.blit(exit_label, (settings.WIDTH // 2 - exit_label.get_width() // 2, settings.HEIGHT // 2 + 60))
