@@ -1,3 +1,4 @@
+from sound_manager import SoundManager
 import pygame
 import sys
 import settings
@@ -32,6 +33,7 @@ class TetrisGame:
         self.board = Board(settings.COLS, settings.ROWS)
         self.piece_generator = PieceGenerator(start_x=3, start_y=0, preview_size=3)
         self.data_manager = DataManager()
+        self.sound_manager = SoundManager()
 
         # --- Стан гри ---
         self.score: int = 0
@@ -59,15 +61,6 @@ class TetrisGame:
         self._overlay = pygame.Surface((settings.WIDTH, settings.HEIGHT))
         self._overlay.set_alpha(180)
         self._overlay.fill((0, 0, 0))
-
-        # --- Звуки ---
-        self.move_sound       = pygame.mixer.Sound("assets/sounds/move.wav")
-        self.rotate_sound     = pygame.mixer.Sound("assets/sounds/rotate.wav")
-        self.drop_sound       = pygame.mixer.Sound("assets/sounds/drop.wav")
-        self.hard_drop_sound  = pygame.mixer.Sound("assets/sounds/hard_drop.wav")
-        self.clear_sound      = pygame.mixer.Sound("assets/sounds/clear.wav")
-        self.hold_sound       = pygame.mixer.Sound("assets/sounds/hold.wav")
-        self.game_over_sound  = pygame.mixer.Sound("assets/sounds/game_over.wav")
 
         # --- Перша фігура ---
         self.current_piece = self.piece_generator.get_next_piece()
@@ -137,7 +130,7 @@ class TetrisGame:
             if not self.board.validate_space(self.current_piece):
                 self.current_piece.move_right()
             else:
-                self.move_sound.play()
+                self.sound_manager.play("move")
                 self._update_ghost()
 
         elif key == pygame.K_RIGHT:
@@ -145,7 +138,7 @@ class TetrisGame:
             if not self.board.validate_space(self.current_piece):
                 self.current_piece.move_left()
             else:
-                self.move_sound.play()
+                self.sound_manager.play("move")
                 self._update_ghost()
 
         elif key == pygame.K_UP:
@@ -153,7 +146,7 @@ class TetrisGame:
             if not self.board.validate_space(self.current_piece):
                 self.current_piece.rotate_back()
             else:
-                self.rotate_sound.play()
+                self.sound_manager.play("rotate")
                 self._update_ghost()
 
         elif key == pygame.K_SPACE:
@@ -161,14 +154,14 @@ class TetrisGame:
             while self.board.validate_space(self.current_piece):
                 self.current_piece.move_down()
             self.current_piece.move_up()
-            self.hard_drop_sound.play()
+            self.sound_manager.play("hard_drop")
             self._lock_piece()
 
         elif key == pygame.K_c:
             # Hold — звук лише якщо hold спрацював
             new_piece = self.piece_generator.hold_piece(self.current_piece)
             if new_piece is not self.current_piece:
-                self.hold_sound.play()
+                self.sound_manager.play("hold")
             self.current_piece = new_piece
             self._update_ghost()
             if not self.board.validate_space(self.current_piece):
@@ -205,7 +198,7 @@ class TetrisGame:
             self.current_piece.move_down()
             if not self.board.validate_space(self.current_piece):
                 self.current_piece.move_up()
-                self.drop_sound.play()
+                self.sound_manager.play("drop")
                 self._lock_piece()
 
     def _lock_piece(self):
@@ -216,7 +209,7 @@ class TetrisGame:
         cleared = self.board.clear_rows()
 
         if cleared > 0:
-            self.clear_sound.play()
+            self.sound_manager.play("clear")
 
         self.score += SCORE_TABLE.get(cleared, 0)
 
@@ -231,7 +224,7 @@ class TetrisGame:
         if self.game_over:
             return  # уникаємо подвійного збереження рекорду
         self.data_manager.save_new_score(self.score)
-        self.game_over_sound.play()
+        self.sound_manager.play("game_over")
         self.game_over = True
 
     # ------------------------------------------------------------------
