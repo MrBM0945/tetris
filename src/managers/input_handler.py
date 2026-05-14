@@ -1,3 +1,4 @@
+from src.core.states import GameState
 import pygame
 import sys
 
@@ -7,6 +8,7 @@ class InputHandler:
         # щоб контролер міг викликати його методи
         self.game = game
 
+    # pyrefly: ignore [parse-error]
     def handle_input(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -16,29 +18,33 @@ class InputHandler:
             if event.type != pygame.KEYDOWN:
                 continue
 
-            # Глобальна кнопка виходу
-            if event.key == pygame.K_ESCAPE:
-                if not self.game.game_over:
-                    self.game._trigger_game_over()
+            # --- Обробка натискань залежно від поточного екрану ---
+            if self.game.state == GameState.MENU:
+                if event.key == pygame.K_RETURN: # Натиснули Enter
+                    self.game.restart_game()
+                elif event.key == pygame.K_ESCAPE: # В меню ESC закриває гру
+                    self.game.running = False
+
+            elif self.game.state == GameState.GAME_OVER:
+                if event.key == pygame.K_RETURN:
+                    self.game.restart_game()         # Enter -> почати заново
+                elif event.key == pygame.K_ESCAPE:
+                    self.game.state = GameState.MENU # ESC -> головне меню
+
+            elif self.game.state == GameState.PAUSED:
+                if event.key == pygame.K_p:
+                    self.game.state = GameState.PLAYING # P -> забрати паузу
+                elif event.key == pygame.K_ESCAPE:
+                    self.game.state = GameState.MENU    # ESC -> головне меню
+
+            elif self.game.state == GameState.PLAYING:
+                if event.key == pygame.K_p or event.key == pygame.K_ESCAPE:
+                    self.game.state = GameState.PAUSED  # ESC або P під час гри -> Пауза
                 else:
-                    self.game.running = False
-                continue
+                    self._handle_gameplay_key(event.key)
+    
 
-            # Екран Game Over
-            if self.game.game_over:
-                if event.key == pygame.K_x:
-                    self.game.running = False
-                continue
-
-            # Пауза
-            if event.key == pygame.K_p:
-                self.game.paused = not self.game.paused
-                continue
-
-            # Керування фігурою (тільки під час гри)
-            if not self.game.paused and not self.game.game_over:
-                self._handle_gameplay_key(event.key)
-
+    # pyrefly: ignore [parse-error]
     def _handle_gameplay_key(self, key: int):
         # Тут живе вся та логіка, що була в грі
         if key == pygame.K_LEFT:

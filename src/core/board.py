@@ -2,7 +2,7 @@
 Модуль, що містить логіку ігрового поля для Тетрісу.
 """
 from typing import Dict, Tuple, Any
-import settings
+from src.config import settings
 
 
 class Board:

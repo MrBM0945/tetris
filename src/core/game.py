@@ -1,16 +1,17 @@
-from sound_manager import SoundManager
+from src.core.states import GameState
+from src.managers.sound_manager import SoundManager
 import pygame
 import sys
-import settings
+from src.config import settings
 
 from datetime import datetime
-from piece import Piece
-from board import Board
-from piece_factory import PieceGenerator
-from renderer import Renderer
-from data_manager import DataManager
-from tetrominoes import TetrominoRegistry
-from input_handler import InputHandler
+from src.entities.piece import Piece
+from src.core.board import Board
+from src.entities.piece_factory import PieceGenerator
+from src.ui.renderer import Renderer
+from src.managers.data_manager import DataManager
+from src.entities.tetrominoes import TetrominoRegistry
+from src.managers.input_handler import InputHandler
 
 
 # Таблиця очок за кількість очищених ліній
@@ -31,51 +32,54 @@ class TetrisGame:
 
         # --- Підсистеми ---
         self.renderer = Renderer(self.screen)
-        self.board = Board(settings.COLS, settings.ROWS)
-        self.piece_generator = PieceGenerator(start_x=3, start_y=0, preview_size=3)
         self.data_manager = DataManager()
         self.sound_manager = SoundManager()
         self.input_handler = InputHandler(self)
 
         # --- Стан гри ---
-        self.score: int = 0
         self.running: bool = True
-        self.paused: bool = False
-        self.game_over: bool = False
+        self.state = GameState.MENU
+    
+    def restart_game(self):
+        """Цей метод викликається при старті з меню або після програшу."""
+        self.board = Board(settings.COLS, settings.ROWS)
+        self.piece_generator = PieceGenerator(start_x=3, start_y=0, preview_size=3)
+        self.score = 0
+        
+        self.fall_speed = settings.FALL_SPEED
+        self.fall_interval = 1000.0 / self.fall_speed
+        self.fall_time = 0.0
+        self.speed_time = 0.0
+        
+        self.start_time = datetime.now()
+        self.start_ticks = pygame.time.get_ticks()
+        self.elapsed_seconds = 0
 
-        # --- Фізика падіння ---
-        self.fall_speed: float = settings.FALL_SPEED
-        self.fall_interval: float = 1000.0 / self.fall_speed
-        self.fall_time: float = 0.0
-        self.speed_time: float = 0.0
-
-        # --- Таймер ---
-        self.start_time: datetime = datetime.now()
-        self.start_ticks: int = pygame.time.get_ticks()
-        self.elapsed_seconds: int = 0
-
-        # --- Перша фігура ---
         self.current_piece = self.piece_generator.get_next_piece()
         self.ghost_coords = []
         self._update_ghost()
-        if not self.board.validate_space(self.current_piece):
-            self._trigger_game_over()
+        
+        self.state = GameState.PLAYING # Переводимо в режим гри
 
     def run(self):
         while self.running:
             dt = self.clock.tick(settings.FPS)
             self.input_handler.handle_input()
 
-            if not self.game_over and not self.paused:
+            if self.state == GameState.PLAYING:
                 self._update(dt)
 
             self.draw()
 
         pygame.quit()
         sys.exit()
-    # ------------------------------------------------------------------
-    # Логіка оновлення стану гри
-    # ------------------------------------------------------------------
+    
+    def _trigger_game_over(self):
+        if self.state == GameState.GAME_OVER:
+            return
+        self.data_manager.save_new_score(self.score)
+        self.sound_manager.play("game_over")
+        self.state = GameState.GAME_OVER
 
     def _update(self, dt: float):
         self.elapsed_seconds = (pygame.time.get_ticks() - self.start_ticks) // 1000
@@ -125,14 +129,6 @@ class TetrisGame:
             self.current_piece = self.piece_generator.get_next_piece()
             self._update_ghost()
 
-    def _trigger_game_over(self):
-        """Єдина точка входу для завершення гри."""
-        if self.game_over:
-            return  # уникаємо подвійного збереження рекорду
-        self.data_manager.save_new_score(self.score)
-        self.sound_manager.play("game_over")
-        self.game_over = True
-
     def _update_ghost(self):
         """ОБЧИСЛЮЄ координати тіні. Викликати ТІЛЬКИ при зміні позиції/повороту фігури."""
         ghost = Piece(
@@ -150,39 +146,40 @@ class TetrisGame:
         self.ghost_coords = ghost.get_formatted_shape()
     
     def draw(self):
-        # 1. Тло
-        self.screen.fill((40, 40, 50))
-        self.renderer.draw_title()
-        self.renderer.draw_grid(settings.GRID_X, settings.GRID_Y)
+        if self.state == GameState.MENU:
+            # 1. Малюємо ТІЛЬКИ головне меню, ніякого поля і блоків
+            self.renderer.draw_main_menu()
+        else:
+            # 2. Малюємо гру (PLAYING, PAUSED або GAME_OVER)
+            self.screen.fill((40, 40, 50))
+            self.renderer.draw_title()
+            self.renderer.draw_grid(settings.GRID_X, settings.GRID_Y)
 
-        # 2. Нерухомі блоки на полі
-        for (x, y), color in self.board.locked_positions.items():
-            if y >= 0:
-                self.renderer.draw_shape([(x, y)], color, settings.GRID_X, settings.GRID_Y)
+            for (x, y), color in self.board.locked_positions.items():
+                if y >= 0:
+                    self.renderer.draw_shape([(x, y)], color, settings.GRID_X, settings.GRID_Y)
 
-        # 3. Тінь та Активна фігура
-        self.renderer.draw_ghost(self.ghost_coords, self.current_piece.color)
-        self.renderer.draw_shape(
-            self.current_piece.get_formatted_shape(),
-            self.current_piece.color,
-            settings.GRID_X, settings.GRID_Y
-        )
+            self.renderer.draw_ghost(self.ghost_coords, self.current_piece.color)
+            self.renderer.draw_shape(
+                self.current_piece.get_formatted_shape(),
+                self.current_piece.color,
+                settings.GRID_X, settings.GRID_Y
+            )
 
-        # 4. Бічна панель (передаємо тільки чисті дані)
-        self.renderer.draw_ui_panel(
-            score=self.score,
-            high_score=self.data_manager.high_score_data["score"],
-            start_time=self.start_time,
-            elapsed_seconds=self.elapsed_seconds,
-            held_type=self.piece_generator.get_held_shape_type(),
-            next_shapes=self.piece_generator.peek_next_shape_types()
-        )
+            self.renderer.draw_ui_panel(
+                score=self.score,
+                high_score=self.data_manager.high_score_data["score"],
+                start_time=self.start_time,
+                elapsed_seconds=self.elapsed_seconds,
+                held_type=self.piece_generator.get_held_shape_type(),
+                next_shapes=self.piece_generator.peek_next_shape_types()
+            )
 
-        # 5. Стани (Пауза / Кінець гри)
-        if self.paused:
-            self.renderer.draw_pause()
-        elif self.game_over:
-            self.renderer.draw_game_over(self.score)
+            # Оверлеї поверх гри
+            if self.state == GameState.PAUSED:
+                self.renderer.draw_pause()
+            elif self.state == GameState.GAME_OVER:
+                self.renderer.draw_game_over(self.score)
 
         pygame.display.update()
 

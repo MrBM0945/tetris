@@ -1,8 +1,8 @@
 import random
 from typing import List, Optional
 
-from piece import Piece
-from tetrominoes import TetrominoRegistry
+from src.entities.piece import Piece
+from src.entities.tetrominoes import TetrominoRegistry
 
 
 class PieceGenerator:

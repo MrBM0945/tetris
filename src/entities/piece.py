@@ -1,6 +1,6 @@
 from typing import Dict, List, Tuple
 
-from tetrominoes import TetrominoRegistry, TetrominoDefinition
+from src.entities.tetrominoes import TetrominoRegistry, TetrominoDefinition
 
 Coordinate = Tuple[int, int]
 Color = Tuple[int, int, int]

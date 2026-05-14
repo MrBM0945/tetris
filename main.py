@@ -1,4 +1,4 @@
-from game import TetrisGame
+from src.core.game import TetrisGame
 if __name__ == "__main__":
     game = TetrisGame()
     game.run()
