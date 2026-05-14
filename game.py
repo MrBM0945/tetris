@@ -71,6 +71,8 @@ class TetrisGame:
 
         # --- Перша фігура ---
         self.current_piece = self.piece_generator.get_next_piece()
+        self.ghost_coords = []
+        self._update_ghost() 
         if not self.board.validate_space(self.current_piece):
             self._trigger_game_over()
 
@@ -136,6 +138,7 @@ class TetrisGame:
                 self.current_piece.move_right()
             else:
                 self.move_sound.play()
+                self._update_ghost()
 
         elif key == pygame.K_RIGHT:
             self.current_piece.move_right()
@@ -143,6 +146,7 @@ class TetrisGame:
                 self.current_piece.move_left()
             else:
                 self.move_sound.play()
+                self._update_ghost()
 
         elif key == pygame.K_UP:
             self.current_piece.rotate()
@@ -150,6 +154,7 @@ class TetrisGame:
                 self.current_piece.rotate_back()
             else:
                 self.rotate_sound.play()
+                self._update_ghost()
 
         elif key == pygame.K_SPACE:
             # Hard drop
@@ -165,6 +170,7 @@ class TetrisGame:
             if new_piece is not self.current_piece:
                 self.hold_sound.play()
             self.current_piece = new_piece
+            self._update_ghost()
             if not self.board.validate_space(self.current_piece):
                 self._trigger_game_over()
 
@@ -218,6 +224,7 @@ class TetrisGame:
             self._trigger_game_over()
         else:
             self.current_piece = self.piece_generator.get_next_piece()
+            self._update_ghost()
 
     def _trigger_game_over(self):
         """Єдина точка входу для завершення гри."""
@@ -267,8 +274,8 @@ class TetrisGame:
     # Допоміжні методи малювання
     # ------------------------------------------------------------------
 
-    def _draw_ghost(self):
-        """Малює ghost-piece (тінь падіння)."""
+    def _update_ghost(self):
+        """ОБЧИСЛЮЄ координати тіні. Викликати ТІЛЬКИ при зміні позиції/повороту фігури."""
         ghost = Piece(
             self.current_piece.x,
             self.current_piece.y,
@@ -280,6 +287,14 @@ class TetrisGame:
             ghost.move_down()
         ghost.move_up()
 
+        # Зберігаємо готові координати
+        self.ghost_coords = ghost.get_formatted_shape()
+
+    def _draw_ghost(self):
+        """МАЛЮЄ тінь. Викликається 60 разів на секунду з draw()."""
+        if not self.ghost_coords:
+            return
+
         r, g, b = self.current_piece.color
         ghost_color = (
             (r + 255 * 3) // 4,
@@ -287,10 +302,12 @@ class TetrisGame:
             (b + 255 * 3) // 4
         )
         self.renderer.draw_ghost_shape(
-            ghost.get_formatted_shape(), ghost_color,
+            self.ghost_coords, # Беремо ЗАКЕШОВАНІ координати, жодних циклів!
+            ghost_color,
             settings.GRID_X, settings.GRID_Y
         )
 
+    # pyrefly: ignore [parse-error]
     def _draw_panel(self):
         """Малює бічну панель зі статистикою, hold та next-preview."""
         x = PANEL_X
@@ -348,6 +365,7 @@ class TetrisGame:
                 x + 40, settings.GRID_Y + 400
             )
 
+    # pyrefly: ignore [parse-error]
     def _draw_pause_overlay(self):
         self.screen.blit(self._overlay, (0, 0))
 
@@ -365,6 +383,7 @@ class TetrisGame:
              settings.HEIGHT // 2 + 50)
         )
 
+    # pyrefly: ignore [parse-error]
     def _draw_game_over_overlay(self):
         self.screen.blit(self._overlay, (0, 0))
 
