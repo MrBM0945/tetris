@@ -1,9 +1,7 @@
-from turtle import title
-
 import pygame
 import settings
 
-from settings import CELL, BLACK, SHAPE_COLORS
+from settings import CELL, BLACK
 
 class Renderer:
     def __init__(self, screen): 
@@ -41,12 +39,6 @@ class Renderer:
         duration_label = stats_font.render(f"Duration: {duration_str}", True, (0, 255, 100))
         self.screen.blit(duration_label, (base_x, base_y + 30))
 
-
-    def shape_height(self, shape):
-        return max(block[1] for block in shape) + 1
-
-    def shape_width(self, shape):
-        return max(block[0] for block in shape) + 1
 
     def draw_shape(self, shape, color, x, y):
         light = self.adjust_color(color, 40)
@@ -112,7 +104,7 @@ class Renderer:
                 1
             )
 
-    def draw_grid(self, cols, rows, grid_x, grid_y, grid_bg, grid_line):
+    def draw_grid(self, cols, rows, grid_x, grid_y, grid_line):
         width = cols * CELL
         height = rows * CELL
         
@@ -171,22 +163,4 @@ class Renderer:
             (grid_x, grid_y, width, height),
             3
     )
-
-    def draw_gallery(self, tetrominoes, start_x, start_y, cols_per_row=4, spacing=20):
-        cell_size = 4 * CELL 
-        column_width = cell_size + spacing
-        row_height = cell_size + spacing
-
-        current_x, current_y = start_x, start_y
-        count = 0
-
-        for name, shape in tetrominoes.items():
-            color = SHAPE_COLORS.get(name, (200, 200, 200))
-            self.draw_shape(shape, color, current_x, current_y)
-
-            count += 1
-            current_x += column_width
-
-            if count % cols_per_row == 0:
-                current_x = start_x
-                current_y += row_height
+

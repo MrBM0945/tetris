@@ -65,15 +65,6 @@ class PieceGenerator:
         """
         return Piece(self.start_x, self.start_y, shape_type)
 
-    def create_piece(self, shape_type: str) -> Piece:
-        """
-        Створює фігуру конкретного типу у стартовій позиції.
-        """
-        if not TetrominoRegistry.has_shape(shape_type):
-            raise ValueError(f"Unknown shape type: {shape_type}")
-
-        return self._build_piece(shape_type)
-
     def get_next_piece(self) -> Piece:
         """
         Повертає наступну фігуру з черги.
@@ -90,25 +81,6 @@ class PieceGenerator:
         Повертає список типів фігур, які зараз є в черзі preview.
         """
         return self._queue.copy()
-
-    def set_start_position(self, start_x: int, start_y: int) -> None:
-        """
-        Змінює стартову позицію для всіх нових фігур.
-        """
-        self.start_x = start_x
-        self.start_y = start_y
-
-    def reset_hold_state(self) -> None:
-        """
-        Дозволяє знову використовувати hold для поточної фігури.
-        """
-        self._can_hold = True
-
-    def can_hold(self) -> bool:
-        """
-        Повертає, чи можна зараз виконати hold.
-        """
-        return self._can_hold
 
     def get_held_shape_type(self) -> Optional[str]:
         """

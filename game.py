@@ -4,7 +4,6 @@ import settings
 from datetime import datetime
 from piece import Piece
 from board import Board
-from piece import Piece
 from piece_factory import PieceGenerator
 from renderer import Renderer
 from data_manager import DataManager
@@ -121,8 +120,7 @@ class TetrisGame:
     def lock_piece(self):
         for x, y in self.current_piece.get_formatted_shape():
             self.board.locked_positions[(x, y)] = self.current_piece.color
-        
-        self.board.update_grid()
+            
         cleared = self.board.clear_rows()
 
         if cleared > 0:
@@ -173,14 +171,13 @@ class TetrisGame:
 
     def draw(self):
         self.screen.fill((40, 40, 50))
-        
-        self.renderer = Renderer(self.screen)
+
         self.renderer.draw_title()
         
         self.renderer.draw_grid(
             settings.COLS, settings.ROWS, 
             settings.GRID_X, settings.GRID_Y, 
-            settings.GRID_BG, settings.GRID_LINE
+            settings.GRID_LINE
         )
         
 

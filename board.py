@@ -4,13 +4,6 @@
 from typing import Dict, List, Tuple, Any
 import settings
 
-class GridBoundaryError(Exception):
-    """Викликається, коли відбувається спроба вийти за межі ігрового поля."""
-    pass
-
-class PositionOccupiedError(Exception):
-    """Викликається, коли відбувається спроба розмістити блок на вже зайнятій клітинці."""
-    pass
 
 class Board:
     """
@@ -24,10 +17,7 @@ class Board:
         """
         self._columns: int = columns
         self._rows: int = rows
-        # Словник, де ключ - координати (x, y), а значення - колір блоку RGB
         self.locked_positions: Dict[Tuple[int, int], Tuple[int, int, int]] = {}
-        # Двовимірний масив кольорів для відмальовки
-        self.grid: List[List[Tuple[int, int, int]]] = self.create_grid()
 
     @property
     def columns(self) -> int:
@@ -46,24 +36,6 @@ class Board:
     def __repr__(self) -> str:
         """Офіційне рядкове представлення об'єкта Board."""
         return self.__str__()
-
-    def create_grid(self) -> List[List[Tuple[int, int, int]]]:
-        """
-        Створює чисту матрицю кольорів на основі порожнього фону та заблокованих позицій.
-        
-        Returns:
-            List[List[Tuple[int, int, int]]]: 2D список, що представляє сітку поля,
-            де кожна клітинка містить RGB кортеж кольору.
-        """
-        grid: List[List[Tuple[int, int, int]]] = [[settings.BG_COLOR for _ in range(self.columns)] for _ in range(self.rows)]
-        for (x, y), color in self.locked_positions.items():
-            if y >= 0:
-                grid[y][x] = color
-        return grid
-
-    def update_grid(self) -> None:
-        """Оновлює внутрішню ігрову сітку відповідно до поточних заблокованих позицій."""
-        self.grid = self.create_grid()
 
     def validate_space(self, piece: Any) -> bool:
         """
@@ -118,9 +90,6 @@ class Board:
                 self.locked_positions = new_locked
             else:
                 row -= 1
-
-        if cleared_lines_count > 0:
-            self.update_grid()
             
         return cleared_lines_count
 

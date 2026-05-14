@@ -84,10 +84,6 @@ class Piece:
         """Відкат повороту на один стан назад."""
         self.rotation = (self.rotation - 1) % self.get_rotation_count()
 
-    def set_position(self, x: int, y: int) -> None:
-        """Явно встановлює координати фігури."""
-        self.x = x
-        self.y = y
 
     def get_state(self) -> Dict[str, object]:
         """Повертає поточний стан фігури у вигляді словника."""
