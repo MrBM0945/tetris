@@ -4,6 +4,7 @@ import settings
 from datetime import datetime
 from piece import Piece
 from board import Board
+from piece import Piece
 from piece_factory import PieceGenerator
 from renderer import Renderer
 from data_manager import DataManager
@@ -12,6 +13,7 @@ from tetrominoes import TetrominoRegistry
 class TetrisGame:
     def __init__(self):
         pygame.init()
+        pygame.mixer.init()
         self.screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
        
         pygame.display.set_caption("Tetris")
@@ -40,14 +42,17 @@ class TetrisGame:
 
         self.font = pygame.font.SysFont("comicsans", 30)
         
-        self.data_manager = DataManager()
-        
-        
+        self.move_sound = pygame.mixer.Sound("assets/sounds/move.wav")
+        self.rotate_sound = pygame.mixer.Sound("assets/sounds/rotate.wav")
+        self.drop_sound = pygame.mixer.Sound("assets/sounds/drop.wav")
+        self.hard_drop_sound = pygame.mixer.Sound("assets/sounds/hard_drop.wav")
+        self.clear_sound = pygame.mixer.Sound("assets/sounds/clear.wav")
+        self.hold_sound = pygame.mixer.Sound("assets/sounds/hold.wav")
+        self.game_over_sound = pygame.mixer.Sound("assets/sounds/game_over.wav")
+
         self.start_time = datetime.now() # для відображення дати/часу початку
         self.start_ticks = pygame.time.get_ticks() # для точного відліку секунд
         self.elapsed_seconds = 0
-        
-        self.score = 0
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -59,6 +64,7 @@ class TetrisGame:
                 if event.key == pygame.K_ESCAPE:
                     print(f"Game exited! Final Score: {self.score}")
                     self.data_manager.save_new_score(self.score)
+                    self.game_over_sound.play()
                     self.game_over = True
                     continue
                 
@@ -74,17 +80,22 @@ class TetrisGame:
 
                     if not self.board.validate_space(self.current_piece):
                         self.current_piece.move_right()
+                    else:
+                        self.move_sound.play()
 
                 elif event.key == pygame.K_RIGHT:
                     self.current_piece.move_right()
 
                     if not self.board.validate_space(self.current_piece):
                         self.current_piece.move_left()
+                    else:
+                        self.move_sound.play()
                         
                 elif event.key == pygame.K_SPACE:
                     while self.board.validate_space(self.current_piece):
                         self.current_piece.move_down()
                     self.current_piece.move_up()
+                    self.hard_drop_sound.play()
                     self.lock_piece()
 
                 elif event.key == pygame.K_UP:
@@ -92,13 +103,17 @@ class TetrisGame:
 
                     if not self.board.validate_space(self.current_piece):
                         self.current_piece.rotate_back()
+                    else:
+                        self.rotate_sound.play()
                         
                 elif event.key == pygame.K_c:
                     self.current_piece = self.piece_generator.hold_piece(self.current_piece)
+                    self.hold_sound.play()
                     if not self.board.validate_space(self.current_piece):
                         print("Game Over after hold!")
                         self.data_manager.save_new_score(self.score)
-                        self.running = False
+                        self.game_over_sound.play()
+                        self.game_over = True
                 
                 elif event.key == pygame.K_p:
                     self.paused = not self.paused
@@ -109,6 +124,9 @@ class TetrisGame:
         
         self.board.update_grid()
         cleared = self.board.clear_rows()
+
+        if cleared > 0:
+            self.clear_sound.play()
         
         # Нарахування очок за прогресивною шкалою
         points = {1: 100, 2: 300, 3: 500, 4: 1200}
@@ -116,6 +134,7 @@ class TetrisGame:
         
         if self.board.check_game_over():
             self.data_manager.save_new_score(self.score)
+            self.game_over_sound.play()
             self.game_over = True
         else:
             self.current_piece = self.piece_generator.get_next_piece()      
@@ -149,7 +168,8 @@ class TetrisGame:
             
             if not self.board.validate_space(self.current_piece):
                 self.current_piece.move_up()
-                self.lock_piece()  # Викликаємо винесену логіку тут
+                self.drop_sound.play()
+                self.lock_piece()
 
     def draw(self):
         self.screen.fill((40, 40, 50))
