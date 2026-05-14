@@ -1,7 +1,7 @@
 """
 Модуль, що містить логіку ігрового поля для Тетрісу.
 """
-from typing import Dict, List, Tuple, Any
+from typing import Dict, Tuple, Any
 import settings
 
 
