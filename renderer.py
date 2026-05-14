@@ -16,10 +16,11 @@ class Renderer:
         self._grid_surface = self._build_grid_surface(
             settings.COLS, settings.ROWS, settings.GRID_LINE
         )
+        # --- Кешовані Surface для overlay ---
+        self._overlay = pygame.Surface((settings.WIDTH, settings.HEIGHT))
+        self._overlay.set_alpha(180)
+        self._overlay.fill((0, 0, 0))
 
-    # ------------------------------------------------------------------
-    # Внутрішні хелпери
-    # ------------------------------------------------------------------
 
     def _build_grid_surface(self, cols: int, rows: int, grid_line) -> pygame.Surface:
         """Будує Surface з намальованою сіткою (фон + лінії).
@@ -130,3 +131,60 @@ class Renderer:
 
             pygame.draw.rect(self.screen, color, rect)
             pygame.draw.rect(self.screen, (220, 220, 220), rect, 1)
+
+    def draw_ghost(self, shape_coords, base_color):
+        """Розраховує колір і малює тінь."""
+        if not shape_coords:
+            return
+        
+        r, g, b = base_color
+        ghost_color = ((r + 255 * 3) // 4, (g + 255 * 3) // 4, (b + 255 * 3) // 4)
+        
+        for block in shape_coords:
+            bx = settings.GRID_X + block[0] * CELL
+            by = settings.GRID_Y + block[1] * CELL
+            rect = pygame.Rect(bx, by, CELL, CELL)
+            pygame.draw.rect(self.screen, ghost_color, rect)
+            pygame.draw.rect(self.screen, (220, 220, 220), rect, 1)
+
+    def draw_ui_panel(self, score, high_score, start_time, elapsed_seconds, held_type, next_shapes):
+        """Малює всю праву частину екрана."""
+        x = settings.GRID_X + settings.COLS * settings.CELL + 30
+        
+        # Score & High Score
+        self.screen.blit(self.font.render(f"Score: {score}", True, settings.WHITE), (x, settings.GRID_Y + 50))
+        self.screen.blit(self.font.render(f"High Score: {high_score}", True, (255, 215, 0)), (x, settings.GRID_Y + 100))
+        
+        # Date & Time
+        date_str = start_time.strftime("%d.%m.%Y")
+        self.screen.blit(self.font.render(f"Date: {date_str}", True, settings.WHITE), (x, settings.GRID_Y + 130))
+        
+        start_time_str = start_time.strftime("%H:%M:%S")
+        duration_str = f"{elapsed_seconds // 60:02}:{elapsed_seconds % 60:02}"
+        self.draw_game_stats(start_time_str, duration_str)
+
+        # Hold
+        if held_type:
+            from tetrominoes import TetrominoRegistry
+            held_def = TetrominoRegistry.get_definition(held_type)
+            self.screen.blit(self.font.render("Hold:", True, settings.WHITE), (x, settings.GRID_Y + 210))
+            self.draw_shape(held_def.get_state(0), held_def.color, x + 40, settings.GRID_Y + 240)
+
+        # Next
+        if next_shapes:
+            from tetrominoes import TetrominoRegistry
+            next_def = TetrominoRegistry.get_definition(next_shapes[0])
+            self.screen.blit(self.font.render("Next:", True, settings.WHITE), (x, settings.GRID_Y + 350))
+            self.draw_shape(next_def.get_state(0), next_def.color, x + 40, settings.GRID_Y + 400)
+
+    def draw_pause(self):
+        self.screen.blit(self._overlay, (0, 0))
+        label = self.title_font.render("PAUSED", True, settings.WHITE)
+        self.screen.blit(label, (settings.WIDTH // 2 - label.get_width() // 2, settings.HEIGHT // 2 - 50))
+
+    def draw_game_over(self, score):
+        self.screen.blit(self._overlay, (0, 0))
+        go_label = self.medium_font.render("GAME OVER", True, settings.WHITE)
+        sc_label = self.medium_font.render(f"Score: {score}", True, settings.WHITE)
+        self.screen.blit(go_label, (settings.WIDTH // 2 - go_label.get_width() // 2, settings.HEIGHT // 2 - 100))
+        self.screen.blit(sc_label, (settings.WIDTH // 2 - sc_label.get_width() // 2, settings.HEIGHT // 2))

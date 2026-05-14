@@ -10,6 +10,7 @@ from piece_factory import PieceGenerator
 from renderer import Renderer
 from data_manager import DataManager
 from tetrominoes import TetrominoRegistry
+from input_handler import InputHandler
 
 
 # Таблиця очок за кількість очищених ліній
@@ -34,6 +35,7 @@ class TetrisGame:
         self.piece_generator = PieceGenerator(start_x=3, start_y=0, preview_size=3)
         self.data_manager = DataManager()
         self.sound_manager = SoundManager()
+        self.input_handler = InputHandler(self)
 
         # --- Стан гри ---
         self.score: int = 0
@@ -52,34 +54,17 @@ class TetrisGame:
         self.start_ticks: int = pygame.time.get_ticks()
         self.elapsed_seconds: int = 0
 
-        # --- Шрифти (кешуються один раз) ---
-        self.font = pygame.font.SysFont("comicsans", 30)
-        self.big_font = pygame.font.SysFont("arialblack", 60)
-        self.medium_font = pygame.font.SysFont("arialblack", 50)
-
-        # --- Кешовані Surface для overlay ---
-        self._overlay = pygame.Surface((settings.WIDTH, settings.HEIGHT))
-        self._overlay.set_alpha(180)
-        self._overlay.fill((0, 0, 0))
-
         # --- Перша фігура ---
         self.current_piece = self.piece_generator.get_next_piece()
         self.ghost_coords = []
-        self._update_ghost() 
+        self._update_ghost()
         if not self.board.validate_space(self.current_piece):
             self._trigger_game_over()
 
-    # ------------------------------------------------------------------
-    # Публічний метод запуску
-    # ------------------------------------------------------------------
-
     def run(self):
         while self.running:
-            # clock.tick() ЗАВЖДИ викликається — це головний обмежувач FPS.
-            # Якщо прибрати звідси — CPU йде в 100% при паузі/game_over.
             dt = self.clock.tick(settings.FPS)
-
-            self.handle_events()
+            self.input_handler.handle_input()
 
             if not self.game_over and not self.paused:
                 self._update(dt)
@@ -88,85 +73,6 @@ class TetrisGame:
 
         pygame.quit()
         sys.exit()
-
-    # ------------------------------------------------------------------
-    # Обробка подій
-    # ------------------------------------------------------------------
-
-    def handle_events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.running = False
-                return
-
-            if event.type != pygame.KEYDOWN:
-                continue
-
-            # ESC — завершення гри
-            if event.key == pygame.K_ESCAPE:
-                self._trigger_game_over()
-                continue
-
-            # X — вихід з екрану game over
-            if self.game_over:
-                if event.key == pygame.K_x:
-                    self.running = False
-                continue
-
-            # P — пауза
-            if event.key == pygame.K_p:
-                self.paused = not self.paused
-                continue
-
-            # Решта керування — тільки під час активної гри
-            if self.paused:
-                continue
-
-            self._handle_gameplay_key(event.key)
-
-    def _handle_gameplay_key(self, key: int):
-        if key == pygame.K_LEFT:
-            self.current_piece.move_left()
-            if not self.board.validate_space(self.current_piece):
-                self.current_piece.move_right()
-            else:
-                self.sound_manager.play("move")
-                self._update_ghost()
-
-        elif key == pygame.K_RIGHT:
-            self.current_piece.move_right()
-            if not self.board.validate_space(self.current_piece):
-                self.current_piece.move_left()
-            else:
-                self.sound_manager.play("move")
-                self._update_ghost()
-
-        elif key == pygame.K_UP:
-            self.current_piece.rotate()
-            if not self.board.validate_space(self.current_piece):
-                self.current_piece.rotate_back()
-            else:
-                self.sound_manager.play("rotate")
-                self._update_ghost()
-
-        elif key == pygame.K_SPACE:
-            # Hard drop
-            while self.board.validate_space(self.current_piece):
-                self.current_piece.move_down()
-            self.current_piece.move_up()
-            self.sound_manager.play("hard_drop")
-            self._lock_piece()
-
-        elif key == pygame.K_c:
-            # Hold — звук лише якщо hold спрацював
-            new_piece = self.piece_generator.hold_piece(self.current_piece)
-            if new_piece is not self.current_piece:
-                self.sound_manager.play("hold")
-            self.current_piece = new_piece
-            self._update_ghost()
-            if not self.board.validate_space(self.current_piece):
-                self._trigger_game_over()
-
     # ------------------------------------------------------------------
     # Логіка оновлення стану гри
     # ------------------------------------------------------------------
@@ -227,46 +133,6 @@ class TetrisGame:
         self.sound_manager.play("game_over")
         self.game_over = True
 
-    # ------------------------------------------------------------------
-    # Малювання
-    # ------------------------------------------------------------------
-
-    def draw(self):
-        self.screen.fill((40, 40, 50))
-
-        self.renderer.draw_title()
-        self.renderer.draw_grid(settings.GRID_X, settings.GRID_Y)
-
-        # Заблоковані блоки
-        for (x, y), color in self.board.locked_positions.items():
-            if y >= 0:
-                self.renderer.draw_shape([(x, y)], color, settings.GRID_X, settings.GRID_Y)
-
-        # Ghost piece
-        self._draw_ghost()
-
-        # Поточна фігура
-        self.renderer.draw_shape(
-            self.current_piece.get_formatted_shape(),
-            self.current_piece.color,
-            settings.GRID_X, settings.GRID_Y
-        )
-
-        # Панель справа
-        self._draw_panel()
-
-        # Оверлеї (пауза / game over) поверх усього
-        if self.paused:
-            self._draw_pause_overlay()
-        elif self.game_over:
-            self._draw_game_over_overlay()
-
-        pygame.display.update()
-
-    # ------------------------------------------------------------------
-    # Допоміжні методи малювання
-    # ------------------------------------------------------------------
-
     def _update_ghost(self):
         """ОБЧИСЛЮЄ координати тіні. Викликати ТІЛЬКИ при зміні позиції/повороту фігури."""
         ghost = Piece(
@@ -282,109 +148,44 @@ class TetrisGame:
 
         # Зберігаємо готові координати
         self.ghost_coords = ghost.get_formatted_shape()
+    
+    def draw(self):
+        # 1. Тло
+        self.screen.fill((40, 40, 50))
+        self.renderer.draw_title()
+        self.renderer.draw_grid(settings.GRID_X, settings.GRID_Y)
 
-    def _draw_ghost(self):
-        """МАЛЮЄ тінь. Викликається 60 разів на секунду з draw()."""
-        if not self.ghost_coords:
-            return
+        # 2. Нерухомі блоки на полі
+        for (x, y), color in self.board.locked_positions.items():
+            if y >= 0:
+                self.renderer.draw_shape([(x, y)], color, settings.GRID_X, settings.GRID_Y)
 
-        r, g, b = self.current_piece.color
-        ghost_color = (
-            (r + 255 * 3) // 4,
-            (g + 255 * 3) // 4,
-            (b + 255 * 3) // 4
-        )
-        self.renderer.draw_ghost_shape(
-            self.ghost_coords, # Беремо ЗАКЕШОВАНІ координати, жодних циклів!
-            ghost_color,
+        # 3. Тінь та Активна фігура
+        self.renderer.draw_ghost(self.ghost_coords, self.current_piece.color)
+        self.renderer.draw_shape(
+            self.current_piece.get_formatted_shape(),
+            self.current_piece.color,
             settings.GRID_X, settings.GRID_Y
         )
 
-    # pyrefly: ignore [parse-error]
-    def _draw_panel(self):
-        """Малює бічну панель зі статистикою, hold та next-preview."""
-        x = PANEL_X
-
-        # Score
-        self.screen.blit(
-            self.font.render(f"Score: {self.score}", True, settings.WHITE),
-            (x, settings.GRID_Y + 50)
+        # 4. Бічна панель (передаємо тільки чисті дані)
+        self.renderer.draw_ui_panel(
+            score=self.score,
+            high_score=self.data_manager.high_score_data["score"],
+            start_time=self.start_time,
+            elapsed_seconds=self.elapsed_seconds,
+            held_type=self.piece_generator.get_held_shape_type(),
+            next_shapes=self.piece_generator.peek_next_shape_types()
         )
 
-        # High score
-        high_score = self.data_manager.high_score_data["score"]
-        self.screen.blit(
-            self.font.render(f"High Score: {high_score}", True, (255, 215, 0)),
-            (x, settings.GRID_Y + 100)
-        )
+        # 5. Стани (Пауза / Кінець гри)
+        if self.paused:
+            self.renderer.draw_pause()
+        elif self.game_over:
+            self.renderer.draw_game_over(self.score)
 
-        # Дата (рендериться кожен кадр — не змінюється частіше ніж раз на добу,
-        # але дешевший варіант — кешувати. Залишаємо як є.)
-        current_date = self.start_time.strftime("%d.%m.%Y")
-        self.screen.blit(
-            self.font.render(f"Date: {current_date}", True, settings.WHITE),
-            (x, settings.GRID_Y + 130)
-        )
+        pygame.display.update()
 
-        # Час початку та тривалість
-        start_time_str = self.start_time.strftime("%H:%M:%S")
-        minutes = self.elapsed_seconds // 60
-        seconds = self.elapsed_seconds % 60
-        self.renderer.draw_game_stats(start_time_str, f"{minutes:02}:{seconds:02}")
 
-        # Hold
-        held_shape_type = self.piece_generator.get_held_shape_type()
-        if held_shape_type is not None:
-            held_def = TetrominoRegistry.get_definition(held_shape_type)
-            self.screen.blit(
-                self.font.render("Hold:", True, settings.WHITE),
-                (x, settings.GRID_Y + 210)
-            )
-            self.renderer.draw_shape(
-                held_def.get_state(0), held_def.color,
-                x + 40, settings.GRID_Y + 240
-            )
+   
 
-        # Next preview
-        self.screen.blit(
-            self.font.render("Next:", True, settings.WHITE),
-            (x, settings.GRID_Y + 350)
-        )
-        next_shapes = self.piece_generator.peek_next_shape_types()
-        if next_shapes:
-            next_def = TetrominoRegistry.get_definition(next_shapes[0])
-            self.renderer.draw_shape(
-                next_def.get_state(0), next_def.color,
-                x + 40, settings.GRID_Y + 400
-            )
-
-    # pyrefly: ignore [parse-error]
-    def _draw_pause_overlay(self):
-        self.screen.blit(self._overlay, (0, 0))
-
-        pause_label = self.big_font.render("PAUSED", True, settings.WHITE)
-        cont_label = self.font.render("Press P to continue", True, settings.WHITE)
-
-        self.screen.blit(
-            pause_label,
-            (settings.WIDTH // 2 - pause_label.get_width() // 2,
-             settings.HEIGHT // 2 - pause_label.get_height() // 2)
-        )
-        self.screen.blit(
-            cont_label,
-            (settings.WIDTH // 2 - cont_label.get_width() // 2,
-             settings.HEIGHT // 2 + 50)
-        )
-
-    # pyrefly: ignore [parse-error]
-    def _draw_game_over_overlay(self):
-        self.screen.blit(self._overlay, (0, 0))
-
-        go_label = self.medium_font.render("GAME OVER", True, settings.WHITE)
-        result_label = self.medium_font.render(f"Final Score: {self.score}", True, settings.WHITE)
-        exit_label = self.font.render("Press X to exit", True, settings.WHITE)
-
-        cx = settings.WIDTH // 2
-        self.screen.blit(go_label,     (cx - go_label.get_width() // 2,     settings.HEIGHT // 2 - 120))
-        self.screen.blit(result_label, (cx - result_label.get_width() // 2, settings.HEIGHT // 2 - 40))
-        self.screen.blit(exit_label,   (cx - exit_label.get_width() // 2,   settings.HEIGHT // 2 + 30))
