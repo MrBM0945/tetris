@@ -190,7 +190,7 @@ class Renderer:
         self.screen.blit(self._overlay, (0, 0))
         go_label = self.medium_font.render("GAME OVER", True, settings.WHITE)
         exit_label = self.font.render("Press X to exit", True, settings.WHITE)
-        sc_label = self.medium_font.render(f"Score: {score}", True, settings.WHITE)
+        sc_label = self.medium_font.render(f"Final Score: {score}", True, settings.WHITE)
         self.screen.blit(go_label, (settings.WIDTH // 2 - go_label.get_width() // 2, settings.HEIGHT // 2 - 100))
         self.screen.blit(sc_label, (settings.WIDTH // 2 - sc_label.get_width() // 2, settings.HEIGHT // 2))
         self.screen.blit(exit_label, (settings.WIDTH // 2 - exit_label.get_width() // 2, settings.HEIGHT // 2 + 60))
