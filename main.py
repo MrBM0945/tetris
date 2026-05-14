@@ -1,4 +1,4 @@
-import game as g
+from src.core.game import TetrisGame
 if __name__ == "__main__":
-    game = g.TetrisGame()
+    game = TetrisGame()
     game.run()
